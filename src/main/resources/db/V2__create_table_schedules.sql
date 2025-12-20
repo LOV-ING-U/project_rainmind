@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS schedules
 (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT
+    user_id BIGINT,
     title VARCHAR(64) NOT NULL,
     location VARCHAR(64) NOT NULL,
     start_at TIMESTAMP(6) NOT NULL,
