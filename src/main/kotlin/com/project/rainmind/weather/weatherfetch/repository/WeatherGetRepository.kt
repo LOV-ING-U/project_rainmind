@@ -1,4 +1,4 @@
-package com.project.rainmind.weatherfetch.repository
+package com.project.rainmind.weather.weatherfetch.repository
 
 interface WeatherGetRepository : ListCrudRepository<>{
 }
