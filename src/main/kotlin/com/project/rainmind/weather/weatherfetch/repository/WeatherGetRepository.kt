@@ -1,4 +1,8 @@
 package com.project.rainmind.weather.weatherfetch.repository
 
-interface WeatherGetRepository : ListCrudRepository<>{
+import com.project.rainmind.weather.weatherfetch.entity.WeatherForecast
+import org.springframework.data.repository.ListCrudRepository
+
+interface WeatherGetRepository : ListCrudRepository<WeatherForecast, Long> {
+    fun find
 }
