@@ -1,6 +1,6 @@
 package com.project.rainmind.user.dto
 
-class UserSignUpRequest (
+data class UserSignUpRequest (
     val nickname: String,
     val password: String,
 )

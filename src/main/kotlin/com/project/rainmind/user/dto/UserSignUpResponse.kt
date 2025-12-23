@@ -1,6 +1,6 @@
 package com.project.rainmind.user.dto
 
-class UserSignUpResponse(
+data class UserSignUpResponse(
     val nickname: String,
     val location: String,
 )

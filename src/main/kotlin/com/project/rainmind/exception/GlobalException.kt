@@ -1,4 +1,4 @@
-package com.project.rainmind
+package com.project.rainmind.exception
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatusCode
 // 모든 예외의 모체가 되는 exception은 open으로
 open class GlobalException(
     // 1. http status code + 세분화된 error code 위한 field
-    val http_errCode: HttpStatusCode,
+    val http_errCode: HttpStatusCode = HttpStatus.INTERNAL_SERVER_ERROR,
     val http_errCode_cause: Int,
     // 2. error message
     val errMessage: String,
