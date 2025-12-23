@@ -23,9 +23,9 @@ class UserSignUpController (
             .register(
                 nickname = userSignUpRequest.nickname,
                 password = userSignUpRequest.password,
+                region_name = userSignUpRequest.region_name
             )
 
         return ResponseEntity.status(HttpStatus.CREATED).body(userSignUpResponse)
     }
-
 }

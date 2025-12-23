@@ -8,4 +8,6 @@ data class UserSignUpRequest (
     val nickname: String,
     @Schema(description = "회원가입 비밀번호", required = true)
     val password: String,
+    @Schema(description = "살고 있는 지역 이름", required = true)
+    val region_name: String,
 )
