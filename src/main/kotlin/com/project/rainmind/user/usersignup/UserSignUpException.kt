@@ -26,8 +26,8 @@ class InvalidPasswordFormatException :
         )
 
 class InvalidUsernameFormatException :
-    UserSignUpException(
-        http_errCode = HttpStatus.BAD_REQUEST,
-        http_errCode_cause = 1,
-        errMessage = "Invalid username format. Try again."
-    )
+        UserSignUpException(
+            http_errCode = HttpStatus.BAD_REQUEST,
+            http_errCode_cause = 1,
+            errMessage = "Invalid username format. Try again."
+        )
