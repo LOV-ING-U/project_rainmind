@@ -13,7 +13,7 @@ interface WeatherGetRepository : ListCrudRepository<WeatherForecast, Long> {
             FROM weather_forecast w
             WHERE w.region_code = :regionCode
             AND w.fcst_date_and_time >= :start
-            AND w.fcst_date_and_time <= :end
+            AND w.fcst_date_and_time < :end
             ORDER BY w.fcst_date_and_time ASC
         """
     )

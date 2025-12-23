@@ -7,5 +7,7 @@ CREATE TABLE IF NOT EXISTS location
     nx INT NOT NULL,
     ny INT NOT NULL,
     created_at TIMESTAMP(6) NOT NULL,
-    updated_at TIMESTAMP(6) NOT NULL
+    updated_at TIMESTAMP(6) NOT NULL,
+
+    UNIQUE KEY location__uk_ (region_name)
 );
