@@ -1,6 +1,6 @@
 package com.project.rainmind.user.usersignup
 
-import com.project.rainmind.GlobalException
+import com.project.rainmind.exception.GlobalException
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
 
