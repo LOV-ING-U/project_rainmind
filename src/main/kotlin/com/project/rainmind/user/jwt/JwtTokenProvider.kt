@@ -1,0 +1,29 @@
+package com.project.rainmind.user.jwt
+
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+import io.jsonwebtoken.security.Keys
+import io.jsonwebtoken.Jwts
+import io.jsonwebtoken.SignatureAlgorithm
+import java.util.*
+
+@Component
+class JwtTokenProvider(
+    @Value("\${jwt.secret}")
+    private val secretKey: String,
+    @Value("\${jwt.access-token-exp-ms")
+    private val accessTokenExpMs: Long
+) {
+    // reusable key with hmac sha
+    private val key = Keys.hmacShaKeyFor(secretKey.toByteArray())
+
+    fun createToken(
+        nickname: String
+    ): String {
+        val now = Date()
+        val valid_period = Date(now.time + accessTokenExpMs)
+
+        // payload 에 순서대로 nickname, 발급시각, 만료시각 입력 후 signature(with HS256) 후 compact(이어붙임)
+        return Jwts.builder().setSubject(nickname).setIssuedAt(now).setExpiration(valid_period).signWith(key, SignatureAlgorithm.HS256).compact()
+    }
+}

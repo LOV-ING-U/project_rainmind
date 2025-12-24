@@ -1,4 +1,4 @@
-package com.project.rainmind.user.usersignup.entity
+package com.project.rainmind.user.signup.entity
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.relational.core.mapping.Column
