@@ -26,4 +26,19 @@ class JwtTokenProvider(
         // payload 에 순서대로 nickname, 발급시각, 만료시각 입력 후 signature(with HS256) 후 compact(이어붙임)
         return Jwts.builder().setSubject(nickname).setIssuedAt(now).setExpiration(valid_period).signWith(key, SignatureAlgorithm.HS256).compact()
     }
+
+    fun tokenValidateCheck(
+        token: String
+    ): Boolean {
+        return try {
+            // verify with key(signature 검증을 이걸로 한다)
+            // -> build() : 실제 parser 객체 build
+            // -> parseSignedClaims : token을 3부분(header/payload/signature)으로 커팅
+            // 이후 signature 부분으로 실제 검증(시간 만료 여부도 검증)
+            Jwts.parser().verifyWith(key).build().parseSignedClaims(token)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 }
