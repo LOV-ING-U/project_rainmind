@@ -1,8 +1,8 @@
-package com.project.rainmind.user.usersignup.controller
+package com.project.rainmind.user.signup.controller
 
 import com.project.rainmind.user.dto.UserSignUpRequest
 import com.project.rainmind.user.dto.UserSignUpResponse
-import com.project.rainmind.user.usersignup.service.UserSignUpService
+import com.project.rainmind.user.signup.service.UserSignUpService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
