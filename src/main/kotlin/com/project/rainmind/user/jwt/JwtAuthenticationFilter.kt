@@ -23,6 +23,15 @@ class JwtAuthenticationFilter (
         if(uri_check_noneed(uri)) filterChain.doFilter(request, response)
 
         // HTTP request message 에서 Authorization : adfasdasdfas... 찾음(토큰 확인)
+        val auth_header_token = request.getHeader("Authorization")
+        val bearer_token = auth_header_token ?. takeIf {
+            it.startsWith("Bearer ")
+        } ?. removePrefix("Bearer ")
+
+        // bearer token check
+        if(bearer_token != null && jwtTokenProvider.tokenValidateCheck(bearer_token)) {
+            filterChain.doFilter(request, response)
+        } else response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token is empty, or invalid")
     }
 
     private fun uri_check_noneed(
