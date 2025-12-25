@@ -3,15 +3,16 @@ package com.project.rainmind.user.jwt
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.web.filter.OncePerRequestFilter
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 
-
 class JwtAuthenticationFilter (
-    private val jwtTokenProvider: JwtTokenProvider
+    private val jwtTokenProvider: JwtTokenProvider,
+    private val stringRedisTemplate: StringRedisTemplate
 ) : OncePerRequestFilter() {
     // filter logic
     override fun doFilterInternal(
@@ -40,6 +41,13 @@ class JwtAuthenticationFilter (
         if(!bearer_token.isNullOrBlank() && jwtTokenProvider.tokenValidateCheck(bearer_token)) {
             // 일단 validate token 맞음
             // 인증 시작
+            // 가장먼저, redis 토큰 블랙리스트 체크
+            val blacklist_key = "jwt:blacklist:$bearer_token"
+            if(stringRedisTemplate.hasKey(blacklist_key)){
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Already Logout user.")
+                return
+            }
+
             val nickname = jwtTokenProvider.getNickNameFromToken(bearer_token)
 
             // spring 이 제공하는 authentication 객체에 nickname을 넣음
