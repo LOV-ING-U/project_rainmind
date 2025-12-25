@@ -4,6 +4,11 @@ import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.web.filter.OncePerRequestFilter
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
+
 
 class JwtAuthenticationFilter (
     private val jwtTokenProvider: JwtTokenProvider
@@ -20,7 +25,10 @@ class JwtAuthenticationFilter (
         val uri = request.requestURI
 
         // auth 계열(login, register)은 바로 통과
-        if(uri_check_noneed(uri)) filterChain.doFilter(request, response)
+        if(uri_check_noneed(uri)) {
+            filterChain.doFilter(request, response)
+            return
+        }
 
         // HTTP request message 에서 Authorization : adfasdasdfas... 찾음(토큰 확인)
         val auth_header_token = request.getHeader("Authorization")
@@ -29,12 +37,32 @@ class JwtAuthenticationFilter (
         } ?. removePrefix("Bearer ")
 
         // bearer token check
-        if(bearer_token != null && jwtTokenProvider.tokenValidateCheck(bearer_token)) {
+        if(!bearer_token.isNullOrBlank() && jwtTokenProvider.tokenValidateCheck(bearer_token)) {
+            // 일단 validate token 맞음
+            // 인증 시작
+            val nickname = jwtTokenProvider.getNickNameFromToken(bearer_token)
+
+            // spring 이 제공하는 authentication 객체에 nickname을 넣음
+            // principal = 사용자 정체성, credential = 인증수단 같은것. 지금은 이미 인증완료 -> null
+            // authority = 역할기반 인증(?) -> 지금은 안함
+            val authentication = UsernamePasswordAuthenticationToken(
+                nickname,
+                null,
+                listOf(SimpleGrantedAuthority("ROLE_USER"))
+            )
+
+            // log
+            authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
+
+            // spring security 내부 공간에, security context 에 해당 사용자 요청을 공식 등록
+            SecurityContextHolder.getContext().authentication = authentication
+
+            // 이후 filter
             filterChain.doFilter(request, response)
         } else response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token is empty, or invalid")
     }
 
     private fun uri_check_noneed(
         uri: String
-    ): Boolean = uri.substring(0, 10).equals("/v1/auth/")
+    ): Boolean = uri.startsWith("/v1/auth/")
 }

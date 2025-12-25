@@ -11,7 +11,7 @@ import java.util.*
 class JwtTokenProvider(
     @Value("\${jwt.secret}")
     private val secretKey: String,
-    @Value("\${jwt.access-token-exp-ms")
+    @Value("\${jwt.access-token-exp-ms}")
     private val accessTokenExpMs: Long
 ) {
     // reusable key with hmac sha
@@ -34,11 +34,19 @@ class JwtTokenProvider(
             // verify with key(signature 검증을 이걸로 한다)
             // -> build() : 실제 parser 객체 build
             // -> parseSignedClaims : token을 3부분(header/payload/signature)으로 커팅
-            // 이후 signature 부분으로 실제 검증(시간 만료 여부도 검증)
+            // 이후 signature 부분으로 실제 검증(시간 만료 여부도 검증 -> 27줄에 jwts builder 에 set expiration 넣었기 때문)
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token)
             true
         } catch (e: Exception) {
             false
         }
+    }
+
+    fun getNickNameFromToken(
+        token: String
+    ): String {
+        // 위의 createToken 함수에서 nickname을 set subject 에 넣음
+        val payload = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload
+        return payload.subject
     }
 }
