@@ -1,8 +1,8 @@
-package com.project.rainmind.user.login.controller
+package com.project.rainmind.user.controller
 
 import com.project.rainmind.user.dto.UserLogInRequest
 import com.project.rainmind.user.dto.UserLogInResponse
-import com.project.rainmind.user.login.service.UserLogInService
+import com.project.rainmind.user.service.UserLogInService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping

@@ -1,6 +1,6 @@
-package com.project.rainmind.user.login.repository
+package com.project.rainmind.user.repository
 
-import com.project.rainmind.user.signup.entity.User
+import com.project.rainmind.user.entity.User
 import org.springframework.data.repository.ListCrudRepository
 
 interface UserLogInRepository : ListCrudRepository<User, Long> {
