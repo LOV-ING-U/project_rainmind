@@ -1,11 +1,11 @@
-package com.project.rainmind.user.signup.service
+package com.project.rainmind.user.service
 
 import com.project.rainmind.user.dto.UserSignUpResponse
 import com.project.rainmind.user.InvalidPasswordFormatException
 import com.project.rainmind.user.InvalidUsernameFormatException
 import com.project.rainmind.user.UsernameAlreadyExistException
-import com.project.rainmind.user.signup.entity.User
-import com.project.rainmind.user.signup.repository.UserSignUpRepository
+import com.project.rainmind.user.entity.User
+import com.project.rainmind.user.repository.UserSignUpRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.bcrypt.BCrypt
 import org.springframework.stereotype.Service
