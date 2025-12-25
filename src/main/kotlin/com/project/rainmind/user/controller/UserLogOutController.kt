@@ -1,6 +1,7 @@
 package com.project.rainmind.user.controller
 
 import com.project.rainmind.user.service.UserLogOutService
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
@@ -13,9 +14,10 @@ class UserLogOutController (
 ) {
     @PostMapping("/v1/user/logout")
     fun logout(
-
+        request: HttpServletRequest
     ): ResponseEntity<Void> {
-        userLogOutService.logout()
+        val tokenFromRequest = request.getAttribute("token") as String
+        userLogOutService.logout(tokenFromRequest)
         return ResponseEntity.ok().build()
     }
 }

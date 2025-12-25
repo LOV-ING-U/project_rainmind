@@ -58,6 +58,10 @@ class JwtAuthenticationFilter (
                 null,
                 listOf(SimpleGrantedAuthority("ROLE_USER"))
             )
+            // 추가로, request 의 attribute 에 nickname과 token을 붙여, rest controller에서
+            // uri에 토큰을 직접 넣는 그런 일 없이 request에 토큰을 담아 전달
+            request.setAttribute("nickname", nickname)
+            request.setAttribute("token", bearer_token)
 
             // log
             authentication.details = WebAuthenticationDetailsSource().buildDetails(request)
