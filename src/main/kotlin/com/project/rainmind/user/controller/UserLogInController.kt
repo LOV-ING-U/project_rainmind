@@ -13,7 +13,7 @@ class UserLogInController (
     @Autowired
     private val userLogInService: UserLogInService
 ){
-    @PostMapping("/v1/auth/login")
+    @PostMapping("/v1/auth/user/login")
     fun login(
         userLogInRequest: UserLogInRequest
     ): ResponseEntity<UserLogInResponse> {

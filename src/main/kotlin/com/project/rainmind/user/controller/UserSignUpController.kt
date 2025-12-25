@@ -15,7 +15,7 @@ class UserSignUpController (
     @Autowired
     private val userSignUpService: UserSignUpService,
 ){
-    @PostMapping("/v1/auth/register")
+    @PostMapping("/v1/auth/user/register")
     fun register(
         @RequestBody userSignUpRequest: UserSignUpRequest
     ): ResponseEntity<UserSignUpResponse> {
