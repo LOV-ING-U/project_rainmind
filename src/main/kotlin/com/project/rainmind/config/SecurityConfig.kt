@@ -1,8 +1,7 @@
 package com.project.rainmind.config
 
-import com.project.rainmind.user.jwt.JwtAuthenticationFilter
-import com.project.rainmind.user.jwt.JwtTokenProvider
-import org.springframework.beans.factory.annotation.Autowired
+import com.project.rainmind.jwt.JwtAuthenticationFilter
+import com.project.rainmind.jwt.JwtTokenProvider
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -13,7 +12,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 class SecurityConfig (
-    @Autowired
     private val jwtTokenProvider: JwtTokenProvider,
     private val stringRedisTemplate: StringRedisTemplate
 ) {

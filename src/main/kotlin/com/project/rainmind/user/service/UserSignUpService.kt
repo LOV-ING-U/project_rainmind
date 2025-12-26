@@ -6,13 +6,11 @@ import com.project.rainmind.user.InvalidUsernameFormatException
 import com.project.rainmind.user.UsernameAlreadyExistException
 import com.project.rainmind.user.entity.User
 import com.project.rainmind.user.repository.UserSignUpRepository
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.bcrypt.BCrypt
 import org.springframework.stereotype.Service
 
 @Service
 class UserSignUpService (
-    @Autowired
     private val userSignUpRepository: UserSignUpRepository,
 ){
     fun register(

@@ -1,4 +1,4 @@
-package com.project.rainmind.user.jwt
+package com.project.rainmind.jwt
 
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -31,7 +31,7 @@ class JwtAuthenticationFilter (
             return
         }
 
-        // HTTP request message 에서 Authorization : adfasdasdfas... 찾음(토큰 확인)
+        // HTTP request message 에서 Authorization : Bearer adfasdasdfas... 찾음(토큰 확인)
         val auth_header_token = request.getHeader("Authorization")
         val bearer_token = auth_header_token ?. takeIf {
             it.startsWith("Bearer ")
@@ -72,5 +72,5 @@ class JwtAuthenticationFilter (
 
     private fun uri_check_noneed(
         uri: String
-    ): Boolean = uri.startsWith("/v1/auth/")
+    ): Boolean = uri.startsWith("/v1/user/login") or uri.startsWith("/v1/user/register")
 }

@@ -3,15 +3,13 @@ package com.project.rainmind.user.service
 import com.project.rainmind.user.NonExistingUsernameException
 import com.project.rainmind.user.PasswordNotCorrectException
 import com.project.rainmind.user.dto.UserLogInResponse
-import com.project.rainmind.user.jwt.JwtTokenProvider
+import com.project.rainmind.jwt.JwtTokenProvider
 import com.project.rainmind.user.repository.UserLogInRepository
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.crypto.bcrypt.BCrypt
 import org.springframework.stereotype.Service
 
 @Service
 class UserLogInService(
-    @Autowired
     private val userLogInRepository: UserLogInRepository,
     private val jwtTokenProvider: JwtTokenProvider
 ){

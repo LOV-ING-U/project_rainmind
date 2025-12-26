@@ -1,9 +1,7 @@
 package com.project.rainmind.user.controller
 
-import com.project.rainmind.user.jwt.JwtTokenProvider
+import com.project.rainmind.jwt.JwtTokenProvider
 import com.project.rainmind.user.service.UserLogOutService
-import jakarta.servlet.http.HttpServletRequest
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestHeader
@@ -11,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class UserLogOutController (
-    @Autowired
     private val userLogOutService: UserLogOutService,
     private val jwtTokenProvider: JwtTokenProvider
 ) {

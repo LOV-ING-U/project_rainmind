@@ -1,15 +1,12 @@
 package com.project.rainmind.user.service
 
-import com.project.rainmind.user.jwt.JwtTokenProvider
-import org.springframework.beans.factory.annotation.Autowired
+import com.project.rainmind.jwt.JwtTokenProvider
 import org.springframework.data.redis.core.StringRedisTemplate
-import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Service
 class UserLogOutService (
-    @Autowired
     private val stringRedisTemplate: StringRedisTemplate,
     private val jwtTokenProvider: JwtTokenProvider
 ) {
