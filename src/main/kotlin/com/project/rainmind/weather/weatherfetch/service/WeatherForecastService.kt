@@ -4,16 +4,13 @@ import com.project.rainmind.weather.weatherfetch.InvalidRegionNameException
 import com.project.rainmind.weather.weatherfetch.dto.DayWeatherForecastResponse
 import com.project.rainmind.weather.weatherfetch.dto.WeatherForecastItem
 import com.project.rainmind.weather.weatherfetch.repository.LocationRepository
-import com.project.rainmind.weather.weatherfetch.repository.WeatherGetRepository
-import org.springframework.beans.factory.annotation.Autowired
+import com.project.rainmind.weather.weatherfetch.repository.WeatherForecastRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 
 @Service
-class WeatherGetService(
-    @Autowired
-    private val weatherGetRepository: WeatherGetRepository,
-    @Autowired
+class WeatherForecastService(
+    private val weatherForecastRepository: WeatherForecastRepository,
     private val locationRepository: LocationRepository,
 ) {
     fun getDayForecast(
@@ -32,7 +29,7 @@ class WeatherGetService(
         val start = date.atStartOfDay()
         val end = date.plusDays(1).atStartOfDay()
 
-        val weatherForecastList = weatherGetRepository.findAllByRegionCodeAndStartAndEnd(location.id!!, start, end)
+        val weatherForecastList = weatherForecastRepository.findAllByRegionCodeAndStartAndEnd(location.id!!, start, end)
 
         return DayWeatherForecastResponse(
             regionName = regionName,
