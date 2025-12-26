@@ -17,3 +17,10 @@ class InvalidRegionNameException :
             http_errCode_cause = 3,
             errMessage = "Invalid region name input. Try again."
         )
+
+class ExternalWeatherFetchErrorException :
+    WeatherFetchException(
+        http_errCode = HttpStatus.INTERNAL_SERVER_ERROR,
+        http_errCode_cause = 4,
+        errMessage = "Cannot fetch weather from network. Try again."
+    )
