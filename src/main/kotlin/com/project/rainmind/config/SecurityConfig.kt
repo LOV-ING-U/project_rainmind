@@ -8,19 +8,21 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
 @Configuration
 class SecurityConfig (
     @Autowired
-    private val jwtTokenProvider: JwtTokenProvider
+    private val jwtTokenProvider: JwtTokenProvider,
+    private val stringRedisTemplate: StringRedisTemplate
 ) {
     @Bean
     fun addFilterChain(
         http: HttpSecurity
     ): SecurityFilterChain {
         // 우리가 만든 필터
-        val jwtAuthenticationFilter = JwtAuthenticationFilter(jwtTokenProvider)
+        val jwtAuthenticationFilter = JwtAuthenticationFilter(jwtTokenProvider, stringRedisTemplate)
         http.csrf {
             it.disable() // 세션 기반 인증 아님
         }.sessionManagement { // stateless

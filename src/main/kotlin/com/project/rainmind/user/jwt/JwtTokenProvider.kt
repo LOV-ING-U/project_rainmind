@@ -49,4 +49,15 @@ class JwtTokenProvider(
         val payload = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload
         return payload.subject
     }
+
+    fun getRemainTimeOfTokenMS(
+        token: String
+    ): Long {
+        val time = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).payload.expiration.time
+        val remain = time - System.currentTimeMillis()
+
+        if(remain < 0) return 0
+        else return remain
+
+    }
 }
