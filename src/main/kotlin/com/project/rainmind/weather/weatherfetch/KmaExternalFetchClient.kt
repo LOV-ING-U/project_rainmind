@@ -20,7 +20,7 @@ class KmaExternalFetchClient (
         return weatherNowFetchClient.get()
             .uri { builder ->
                 builder
-                    .path("1360000/VilageFcstInfoService_2.0/getUltraSrtNcst")
+                    .path("/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst")
                     .queryParam("serviceKey", serviceKey)
                     .queryParam("pageNo", 1)
                     .queryParam("numOfRows", 1000)

@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema
 
 @Schema(description = "실제 kma server 응답")
 data class KmaWeatherNowFetchResponse (
-    val totalResponse: TotalResponse
+    val response: TotalResponse
 ) {
     @Schema(description = "응답 전체 구조")
     data class TotalResponse(

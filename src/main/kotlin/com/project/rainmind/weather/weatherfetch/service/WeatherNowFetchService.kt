@@ -1,5 +1,6 @@
 package com.project.rainmind.weather.weatherfetch.service
 
+import com.project.rainmind.weather.weatherfetch.ExternalWeatherFetchErrorException
 import com.project.rainmind.weather.weatherfetch.KmaExternalFetchClient
 import com.project.rainmind.weather.weatherfetch.InvalidRegionNameException
 import com.project.rainmind.weather.weatherfetch.dto.WeatherNowFetchResponse
@@ -26,7 +27,7 @@ class WeatherNowFetchService (
         // response => KmaWeatherNowFetchResponse 타입
         // 이를 우리 DTO = WeatherNowFetchResponse 로 바꾼다.
         // 그렇다면, KmaWeatherNowFetchResponse 의 items = list<item> 에서 추출하면 됨
-        val items = response.totalResponse.body.items // List<Item>
+        val items = response.response.body.items // List<Item>
 
         val rn1Response = items.firstOrNull {
             it.category == "RN1"
@@ -40,13 +41,15 @@ class WeatherNowFetchService (
             it.category == "WSD"
         }?.obsrValue
 
+        if(rn1Response == null || ptyResponse == null || wsdResponse == null) throw ExternalWeatherFetchErrorException()
+
         return WeatherNowFetchResponse(
             regionName = regionName,
             baseDate = baseDate,
             baseTime = baseTime,
-            rn1 = rn1Response!!,
-            pty = ptyResponse!!,
-            wsd = wsdResponse!!
+            rn1 = rn1Response,
+            pty = ptyResponse,
+            wsd = wsdResponse
         )
     }
 }

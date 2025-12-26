@@ -11,7 +11,7 @@ class KmaExternalFetchClientConfig {
     fun weatherNowFetchClient(): RestClient =
         RestClient
             .builder()
-            .baseUrl("http://apis.data.go.kr")
+            .baseUrl("https://apis.data.go.kr")
             .defaultHeader("Accept", "application/json")
             .build()
 }
