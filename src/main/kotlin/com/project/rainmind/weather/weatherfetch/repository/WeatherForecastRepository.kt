@@ -32,5 +32,5 @@ interface WeatherForecastRepository : ListCrudRepository<WeatherForecast, Long> 
     )
     fun deleteAllByRegionCode(
         regionCode: Long
-    ): Void
+    ): Int
 }
