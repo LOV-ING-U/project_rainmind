@@ -112,7 +112,7 @@ class WeatherFetchService (
                     regionCode = location.id!!,
                     pop = listCategoryMap["POP"]?.toIntOrNull() ?: 0,
                     pty = listCategoryMap["PTY"]?.toIntOrNull() ?: 0,
-                    pcp = listCategoryMap["POP"] ?: "0",
+                    pcp = listCategoryMap["PCP"] ?: "0",
                     sky = listCategoryMap["SKY"]?.toIntOrNull() ?: 0,
                     wsd = listCategoryMap["WSD"]?.toDoubleOrNull() ?: 0.0,
                     baseDateAndTime = baseDateTime,
