@@ -12,6 +12,7 @@ class WeatherForecastController(
     private val weatherForecastService: WeatherForecastService,
 ) {
     // region name + date
+    // 요청한 날짜의 날씨정보를 모두 가져오는 api
     @GetMapping("/v1/weather/forecast")
     fun getDayWeatherForecast(
         @RequestParam regionName: String,

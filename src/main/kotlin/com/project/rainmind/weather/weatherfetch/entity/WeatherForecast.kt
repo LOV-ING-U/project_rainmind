@@ -9,7 +9,7 @@ import java.time.LocalDateTime
 @Table(name = "weather_forecast")
 class WeatherForecast (
     @Id var id: Long? = null,
-    @Column("region_code") var regionCode: Int,
+    @Column("region_code") var regionCode: Long,
     @Column("pop") var pop: Int,
     @Column("pty") var pty: Int,
     @Column("pcp") var pcp: String,
