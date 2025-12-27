@@ -69,18 +69,18 @@ class WeatherFetchService (
     // 삭제 + 삽입 원자적으로 => transactional
     @Transactional
     fun getFutureWeather(
-        baseDate: String,
-        baseTime: String,
         regionName: String
     ): WeatherFutureFetchResponse {
+        val timeNow = LocalDateTime.now()
         val location = locationRepository.findByRegionName(regionName) ?: throw InvalidRegionNameException()
+
+        val (baseDate, baseTime) = calculateBaseDateTime(timeNow)
         val response = kmaExternalFetchClient.fetchFutureWeather(baseDate, baseTime, location.nx, location.ny)
 
         // DB에 저장 과정
         // 1. 응답 중 오늘 날씨만 남김
         // List<ItemFuture>
         val items = response.response.body.items
-        val timeNow = LocalDateTime.now()
 
         // Map<Pair<String, String>, List<ItemFuture>>
         // ex : "20251226", "0500" -> 12개 줄의 응답(시간대 1개 당 12개 줄)

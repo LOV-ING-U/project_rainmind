@@ -24,10 +24,8 @@ class WeatherFetchController (
 
     @GetMapping("/today")
     fun getFutureWeather(
-        @RequestParam baseDate: String,
-        @RequestParam baseTime: String,
         @RequestParam regionName: String
     ): WeatherFutureFetchResponse {
-        return weatherFetchService.getFutureWeather(baseDate, baseTime, regionName)
+        return weatherFetchService.getFutureWeather(regionName)
     }
 }
