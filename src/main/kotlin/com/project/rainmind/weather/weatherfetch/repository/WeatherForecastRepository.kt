@@ -33,4 +33,18 @@ interface WeatherForecastRepository : ListCrudRepository<WeatherForecast, Long> 
     fun deleteAllByRegionCode(
         regionCode: Long
     ): Int
+
+    @Query(
+        """
+            SELECT *
+            FROM weather_forecast w
+            WHERE w.region_code = :regionCode
+            AND w.fcst_date_and_time = :target
+            LIMIT 1
+        """
+    )
+    fun findOneByRegionCodeAndTargetTime(
+        regionCode: Long,
+        target: LocalDateTime
+    ): WeatherForecast?
 }
