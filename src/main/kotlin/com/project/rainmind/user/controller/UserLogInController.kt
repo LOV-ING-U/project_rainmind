@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 class UserLogInController (
     private val userLogInService: UserLogInService
 ){
-    @PostMapping("/v1/user/login")
+    @PostMapping("/v1/auth/user/login")
     fun login(
         userLogInRequest: UserLogInRequest
     ): ResponseEntity<UserLogInResponse> {

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 class UserSignUpController (
     private val userSignUpService: UserSignUpService,
 ){
-    @PostMapping("/v1/user/register")
+    @PostMapping("/v1/auth/user/register")
     fun register(
         @RequestBody userSignUpRequest: UserSignUpRequest
     ): ResponseEntity<UserSignUpResponse> {

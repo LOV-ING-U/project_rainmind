@@ -7,6 +7,7 @@ import com.project.rainmind.weather.weatherfetch.repository.LocationRepository
 import com.project.rainmind.weather.weatherfetch.repository.WeatherForecastRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDate
+import java.time.LocalTime
 
 @Service
 class WeatherForecastService(
@@ -15,7 +16,8 @@ class WeatherForecastService(
 ) {
     fun getDayForecast(
         regionName: String,
-        date: LocalDate
+        date: LocalDate,
+        time: LocalTime
     ): DayWeatherForecastResponse {
         // parameter of weatherGetRepository
         // 1. regionCode: Int
@@ -26,24 +28,28 @@ class WeatherForecastService(
         val location = locationRepository.findByRegionName(regionName) ?: throw InvalidRegionNameException()
 
         // 2 & 3 : start and end
-        val start = date.atStartOfDay()
-        val end = date.plusDays(1).atStartOfDay()
+        val targetDateTime = date.atTime(time)
+        val weatherForecast = weatherForecastRepository.findOneByRegionCodeAndTargetTime(location.id!!, targetDateTime)
 
-        val weatherForecastList = weatherForecastRepository.findAllByRegionCodeAndStartAndEnd(location.id!!, start, end)
+        val response = if(weatherForecast == null){
+            emptyList()
+        } else {
+            listOf(
+                WeatherForecastItem(
+                    pop = weatherForecast.pop,
+                    pty = weatherForecast.pty,
+                    pcp = weatherForecast.pcp,
+                    sky = weatherForecast.sky,
+                    wsd = weatherForecast.wsd,
+                    fcst_date_and_time = weatherForecast.fcstDateAndTime
+                )
+            )
+        }
 
         return DayWeatherForecastResponse(
             regionName = regionName,
             date = date.toString(),
-            response = weatherForecastList.map {
-                WeatherForecastItem(
-                    pop = it.pop,
-                    pty = it.pty,
-                    pcp = it.pcp,
-                    sky = it.sky,
-                    wsd = it.wsd,
-                    fcst_date_and_time = it.fcstDateAndTime,
-                )
-            }
+            response = response
         )
     }
 }

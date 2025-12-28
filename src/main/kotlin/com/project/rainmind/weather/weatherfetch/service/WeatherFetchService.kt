@@ -22,6 +22,7 @@ class WeatherFetchService (
 ) {
     private val fetchTimes = listOf("0200", "0500", "0800", "1100", "1400", "1700", "2000", "2300")
 
+    // yyyymmdd, hhmm 형식
     fun getCurrentWeather(
         baseDate: String,
         baseTime: String,
