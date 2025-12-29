@@ -19,7 +19,7 @@ class UserSignUpService (
         region_name: String
     ): UserSignUpResponse {
         // 1. user already exist check
-        if(userSignUpRepository.findByNickname(nickname)) throw UsernameAlreadyExistException()
+        if(userSignUpRepository.existsByNickname(nickname)) throw UsernameAlreadyExistException()
         
         // 2. invalid password or invalid username
         // 현재는 4글자 미만인 경우에만 invalid 가정

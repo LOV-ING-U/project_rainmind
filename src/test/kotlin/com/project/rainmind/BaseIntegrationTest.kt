@@ -19,12 +19,14 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.springframework.test.context.ActiveProfiles
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @SpringBootTest
 @Testcontainers
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 class BaseIntegrationTest
     @Autowired
     constructor(
@@ -58,7 +60,7 @@ class BaseIntegrationTest
                 post("/v1/auth/user/register")
                     .content(objectMapper.writeValueAsString(userSignUpRequest))
                     .contentType(MediaType.APPLICATION_JSON)
-            ).andExpect(status().isOk)
+            ).andExpect(status().isCreated)
 
             // login
             val userLogInRequest = UserLogInRequest(nickname, password)
@@ -144,11 +146,12 @@ class BaseIntegrationTest
         fun `return 400 error when username less than 4`() {
             val nickname = "hel"
             val password = "whatwhat"
+            val regionName = "서울대학교"
 
-            val userLogInRequest = UserLogInRequest(nickname, password)
+            val userSignUpRequest = UserSignUpRequest(nickname, password, regionName)
             mvc.perform(
-                post("/v1/user/register")
-                    .content(objectMapper.writeValueAsString(userLogInRequest))
+                post("/v1/auth/user/register")
+                    .content(objectMapper.writeValueAsString(userSignUpRequest))
                     .contentType(MediaType.APPLICATION_JSON)
             ).andExpect(status().isBadRequest)
         }
@@ -157,11 +160,12 @@ class BaseIntegrationTest
         fun `return 400 error when password less than 4`() {
             val nickname = "hello"
             val password = "wha"
+            val regionName = "서울대학교"
 
-            val userLogInRequest = UserLogInRequest(nickname, password)
+            val userSignUpRequest = UserSignUpRequest(nickname, password, regionName)
             mvc.perform(
-                post("/v1/user/register")
-                    .content(objectMapper.writeValueAsString(userLogInRequest))
+                post("/v1/auth/user/register")
+                    .content(objectMapper.writeValueAsString(userSignUpRequest))
                     .contentType(MediaType.APPLICATION_JSON)
             ).andExpect(status().isBadRequest)
         }

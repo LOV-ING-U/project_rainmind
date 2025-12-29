@@ -72,5 +72,5 @@ class JwtAuthenticationFilter (
 
     private fun uri_check_noneed(
         uri: String
-    ): Boolean = uri.startsWith("/v1/user/login") or uri.startsWith("/v1/user/register")
+    ): Boolean = uri.startsWith("/v1/auth/user/login") or uri.startsWith("/v1/auth/user/register")
 }
