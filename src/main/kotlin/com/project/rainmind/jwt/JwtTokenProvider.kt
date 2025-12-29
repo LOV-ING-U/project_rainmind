@@ -24,7 +24,8 @@ class JwtTokenProvider(
         val valid_period = Date(now.time + accessTokenExpMs)
 
         // payload 에 순서대로 nickname, 발급시각, 만료시각 입력 후 signature(with HS256) 후 compact(이어붙임)
-        return Jwts.builder().setSubject(nickname).setIssuedAt(now).setExpiration(valid_period).signWith(key, SignatureAlgorithm.HS256).compact()
+        // 랜덤: setId
+        return Jwts.builder().setSubject(nickname).setIssuedAt(now).setExpiration(valid_period).setId(UUID.randomUUID().toString()).signWith(key, SignatureAlgorithm.HS256).compact()
     }
 
     fun tokenValidateCheck(

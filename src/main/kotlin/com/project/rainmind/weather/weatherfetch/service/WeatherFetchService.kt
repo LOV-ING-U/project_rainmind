@@ -38,7 +38,7 @@ class WeatherFetchService (
         // response => KmaWeatherNowFetchResponse 타입
         // 이를 우리 DTO = WeatherNowFetchResponse 로 바꾼다.
         // 그렇다면, KmaWeatherNowFetchResponse 의 items = list<item> 에서 추출하면 됨
-        val items = response.response.body.items // List<Item>
+        val items = response.response.body.items.item // List<Item>
 
         val rn1Response = items.firstOrNull {
             it.category == "RN1"
@@ -81,7 +81,7 @@ class WeatherFetchService (
         // DB에 저장 과정
         // 1. 응답 중 오늘 날씨만 남김
         // List<ItemFuture>
-        val items = response.response.body.items
+        val items = response.response.body.items.item
 
         // Map<Pair<String, String>, List<ItemFuture>>
         // ex : "20251226", "0500" -> 12개 줄의 응답(시간대 1개 당 12개 줄)
@@ -90,7 +90,7 @@ class WeatherFetchService (
         }
 
         // 2. 기존 DB 전부 삭제
-        weatherForecastRepository.deleteAllByRegionCode(location.id!!)
+        weatherForecastRepository.deleteByRegionCode(location.id!!)
 
         // 3. 새 데이터로 갈아끼우기
         val baseDateTime = LocalDateTime.parse(baseDate + baseTime, DateTimeFormatter.ofPattern("yyyyMMddHHmm"))
@@ -100,8 +100,8 @@ class WeatherFetchService (
             val fcstTime = pair.second
             val fcstDateTime = LocalDateTime.parse(fcstDate + fcstTime, DateTimeFormatter.ofPattern("yyyyMMddHHmm"))
 
-            // 오늘꺼 & 지금 이후꺼만 남기기
-            if(fcstDateTime.toLocalDate() != timeNow.toLocalDate() || fcstDateTime.toLocalTime() < timeNow.toLocalTime()) return@mapNotNull null
+            // 지금 이후 & 내일 2시간치까지 남기기
+            if(fcstDateTime.isBefore(timeNow) || fcstDateTime.isAfter(timeNow.plusDays(1).toLocalDate().atStartOfDay().plusHours(2))) return@mapNotNull null
             else {
                 // 유효한 데이터(= list)들은 12개 줄의 응답을 가지고 있다(카테고리가 12개)
                 // 각 1개의 카테고리마다 map의 원소로 저장
@@ -152,7 +152,7 @@ class WeatherFetchService (
             val baseDate = time.toLocalDate().minusDays(1).format(DateTimeFormatter.ofPattern("yyyyMMdd"))
             return baseDate to "2300"
         } else {
-            // 당일인 경우
+            // 그외 당일인 경우
             val baseDate = time.toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd"))
             return baseDate to biggestTime.format(DateTimeFormatter.ofPattern("HHmm"))
         }

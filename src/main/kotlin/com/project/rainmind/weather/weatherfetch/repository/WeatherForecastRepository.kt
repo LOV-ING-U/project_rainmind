@@ -23,16 +23,9 @@ interface WeatherForecastRepository : ListCrudRepository<WeatherForecast, Long> 
         end: LocalDateTime
     ): List<WeatherForecast>
 
-    @Query(
-        """
-            DELETE
-            FROM weather_forecast
-            WHERE region_code = :regionCode
-        """
-    )
-    fun deleteAllByRegionCode(
+    fun deleteByRegionCode(
         regionCode: Long
-    ): Int
+    )
 
     @Query(
         """
