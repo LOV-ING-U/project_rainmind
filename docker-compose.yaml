@@ -1,0 +1,17 @@
+services:
+  mysql:
+    image: mysql:8.0.28
+    container_name: rainmind_mysql
+    ports:
+      - "3306-3306"
+    environment:
+      MYSQL_DATABASE: rainmind
+      MYSQL_USER: rainmind
+      MYSQL_PASSWORD: rainmind
+      MYSQL_ROOT_PASSWORD: rootpw
+
+  redis:
+    image: redis:7-alpine
+    container_name: rainmind_redis
+    ports:
+      - "6379-6379"

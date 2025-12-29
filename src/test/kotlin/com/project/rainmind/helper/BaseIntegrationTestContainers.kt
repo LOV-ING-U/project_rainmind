@@ -45,7 +45,7 @@ abstract class BaseIntegrationTestContainers {
                 redis.host
             }
             registry.add("spring.data.redis.port") {
-                redis.getMappedPort(8379)
+                redis.getMappedPort(6379)
             }
             registry.add("spring.profiles.active") {
                 "test"

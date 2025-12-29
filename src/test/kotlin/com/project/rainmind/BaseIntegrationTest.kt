@@ -4,7 +4,6 @@ import com.project.rainmind.helper.BaseIntegrationTestContainers
 import com.project.rainmind.user.dto.UserLogInRequest
 import com.project.rainmind.user.dto.UserLogInResponse
 import com.project.rainmind.user.dto.UserSignUpRequest
-import com.project.rainmind.weather.weatherfetch.dto.DayWeatherForecastResponse
 import com.project.rainmind.weather.weatherfetch.entity.Location
 import com.project.rainmind.weather.weatherfetch.repository.LocationRepository
 import com.project.rainmind.weather.weatherfetch.repository.WeatherForecastRepository
@@ -19,7 +18,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectMapper
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -74,14 +73,13 @@ class BaseIntegrationTest
             val bearer_token = "Bearer $token"
             mvc.perform(
                 post("/v1/user/logout")
-                    .content(objectMapper.writeValueAsString(bearer_token))
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", bearer_token)
             ).andExpect(status().isOk)
 
             // logout 된 토큰으로 날씨 정보 받는 api(로그인 유저만 가능한) 호출 시도
             mvc.perform(
                 get("/v1/weather/forecast")
-                    .header("Authorization", "Bearer $bearer_token")
+                    .header("Authorization", bearer_token)
                     .param("regionName", regionName)
                     .param("date", "2025-12-24")
                     .param("time", "02:00:00")
@@ -91,7 +89,7 @@ class BaseIntegrationTest
             val userLogInRequest2 = UserLogInRequest(nickname, password)
             val loginResult2 = mvc.perform(
                 post("/v1/auth/user/login")
-                    .content(objectMapper.writeValueAsString(userLogInRequest))
+                    .content(objectMapper.writeValueAsString(userLogInRequest2))
                     .contentType(MediaType.APPLICATION_JSON)
             ).andExpect(status().isOk).andReturn()
 
@@ -106,9 +104,9 @@ class BaseIntegrationTest
             mvc.perform(
                 get("/v1/weather/current")
                     .header("Authorization", bearer_token2)
-                    .header("baseDate", baseDate)
-                    .header("baseTime", baseTime)
-                    .header("regionName", regionName)
+                    .param("baseDate", baseDate)
+                    .param("baseTime", baseTime)
+                    .param("regionName", regionName)
             ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.regionName").value(regionName))
                 .andExpect(jsonPath("$.rn1").exists())
@@ -119,7 +117,7 @@ class BaseIntegrationTest
             mvc.perform(
                 get("/v1/weather/today")
                     .header("Authorization", bearer_token2)
-                    .header("regionName", regionName)
+                    .param("regionName", regionName)
             ).andExpect(status().isOk)
                 .andExpect(jsonPath("$.storeCount").exists())
 
@@ -136,9 +134,9 @@ class BaseIntegrationTest
             mvc.perform(
                 get("/v1/weather/forecast")
                     .header("Authorization", bearer_token2)
-                    .header("regionName", regionName)
-                    .header("date", date)
-                    .header("time", time)
+                    .param("regionName", regionName)
+                    .param("date", date)
+                    .param("time", time)
             ).andExpect(status().isOk)
         }
 
