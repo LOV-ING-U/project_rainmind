@@ -17,7 +17,8 @@ class UserLogInService(
         nickname: String,
         password: String
     ): UserLogInResponse {
-        val user = userLogInRepository.findByNickname(nickname) ?: throw NonExistingUsernameException()
+        if(!userLogInRepository.existsByNickname(nickname)) throw NonExistingUsernameException()
+        val user = userLogInRepository.findByNickname(nickname)!!
 
         if(!BCrypt.checkpw(password, user.passwordHash)) throw PasswordNotCorrectException()
 

@@ -5,6 +5,7 @@ import com.project.rainmind.user.dto.UserLogInResponse
 import com.project.rainmind.user.service.UserLogInService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -13,7 +14,7 @@ class UserLogInController (
 ){
     @PostMapping("/v1/auth/user/login")
     fun login(
-        userLogInRequest: UserLogInRequest
+        @RequestBody userLogInRequest: UserLogInRequest
     ): ResponseEntity<UserLogInResponse> {
         val userLogInResponse = userLogInService.login(
             nickname = userLogInRequest.nickname,

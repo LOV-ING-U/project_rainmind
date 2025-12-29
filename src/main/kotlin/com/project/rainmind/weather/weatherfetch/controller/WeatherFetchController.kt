@@ -23,7 +23,7 @@ class WeatherFetchController (
         return weatherFetchService.getCurrentWeather(baseDate, baseTime, regionName)
     }
 
-    @Scheduled(cron = "0 0 2,5,8,11,14,17,20,23 * * *", zone = "Asia/Seoul")
+    // @Scheduled(cron = "0 0 2,5,8,11,14,17,20,23 * * *", zone = "Asia/Seoul")
     @GetMapping("/today")
     fun getFutureWeather(
         @RequestParam regionName: String
