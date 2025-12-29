@@ -49,7 +49,7 @@ class KmaExternalFetchClient (
                     .path("/1360000/VilageFcstInfoService_2.0/getVilageFcst")
                     .queryParam("serviceKey", serviceKey)
                     .queryParam("pageNo", 1)
-                    .queryParam("numOfRows", 1000)
+                    .queryParam("numOfRows", 2000)
                     .queryParam("dataType", "JSON")
                     .queryParam("base_date", baseDate)
                     .queryParam("base_time", baseTime)

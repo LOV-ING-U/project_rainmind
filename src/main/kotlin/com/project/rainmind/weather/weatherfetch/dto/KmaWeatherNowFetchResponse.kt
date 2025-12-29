@@ -21,7 +21,12 @@ data class KmaWeatherNowFetchResponse (
     @Schema(description = "body 구성요소", example = "\"dataType\":\"JSON\", \"items\": {\"item\":{...")
     data class BodyNow(
         val dataType: String,
-        val items: List<ItemNow>
+        val items: ItemsNow
+    )
+
+    @Schema(description = "item 리스트")
+    data class ItemsNow(
+        val item: List<ItemNow>
     )
 
     @Schema(description = "Item 구성요소", example = "\"baseDate\":\"20251226\", \"baseTime\":\"0600\", \"category\":\"PTY\", \"nx\":\"55\", \"ny\":\"127\", \"obsrValue\":\"0\"")

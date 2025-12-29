@@ -21,7 +21,12 @@ data class KmaWeatherFutureFetchResponse (
     @Schema(description = "Body 구성요소", example = "\"dataType\":\"JSON\", \"items\": {\"item\":{...")
     data class BodyFuture(
         val dataType: String,
-        val items: List<ItemFuture>
+        val items: ItemsFuture
+    )
+
+    @Schema(description = "item 리스트")
+    data class ItemsFuture(
+        val item: List<ItemFuture>
     )
 
     @Schema(description = "Item 구성요소", example = "\"baseDate\":\"20251226\", \"baseTime\":\"0600\", \"category\":\"PTY\", \"fcstDate\":\"20251226\", \"fcstTime\":\"0300\", \"fcstValue\":\"-12\", \"nx\":\"55\", \"ny\":\"127\"")
