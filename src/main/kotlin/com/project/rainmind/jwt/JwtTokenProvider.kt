@@ -9,9 +9,9 @@ import java.util.*
 
 @Component
 class JwtTokenProvider(
-    @Value("\${jwt.secret}")
+    @Value("\${security.jwt.secret}")
     private val secretKey: String,
-    @Value("\${jwt.access-token-exp-ms}")
+    @Value("\${security.jwt.access-token-exp-ms}")
     private val accessTokenExpMs: Long
 ) {
     // reusable key with hmac sha
