@@ -1,6 +1,5 @@
-package com.project.rainmind.weather.weatherfetch.dto
+package com.project.rainmind.weather.dto
 
-import com.project.rainmind.weather.weatherfetch.entity.WeatherForecast
 import io.swagger.v3.oas.annotations.media.Schema
 import java.time.LocalDateTime
 

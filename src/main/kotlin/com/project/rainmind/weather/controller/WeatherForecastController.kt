@@ -1,7 +1,7 @@
-package com.project.rainmind.weather.weatherfetch.controller
+package com.project.rainmind.weather.controller
 
-import com.project.rainmind.weather.weatherfetch.dto.DayWeatherForecastResponse
-import com.project.rainmind.weather.weatherfetch.service.WeatherForecastService
+import com.project.rainmind.weather.dto.DayWeatherForecastResponse
+import com.project.rainmind.weather.service.WeatherForecastService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController

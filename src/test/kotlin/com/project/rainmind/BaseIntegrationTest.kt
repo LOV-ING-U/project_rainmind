@@ -4,9 +4,9 @@ import com.project.rainmind.helper.BaseIntegrationTestContainers
 import com.project.rainmind.user.dto.UserLogInRequest
 import com.project.rainmind.user.dto.UserLogInResponse
 import com.project.rainmind.user.dto.UserSignUpRequest
-import com.project.rainmind.weather.weatherfetch.entity.Location
-import com.project.rainmind.weather.weatherfetch.repository.LocationRepository
-import com.project.rainmind.weather.weatherfetch.repository.WeatherForecastRepository
+import com.project.rainmind.weather.entity.Location
+import com.project.rainmind.weather.repository.LocationRepository
+import com.project.rainmind.weather.repository.WeatherForecastRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest

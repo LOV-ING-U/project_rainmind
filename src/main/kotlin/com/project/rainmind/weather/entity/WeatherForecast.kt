@@ -1,7 +1,6 @@
-package com.project.rainmind.weather.weatherfetch.entity
+package com.project.rainmind.weather.entity
 
 import org.springframework.data.annotation.Id
-import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.relational.core.mapping.Column
 import org.springframework.data.relational.core.mapping.Table
 import java.time.LocalDateTime

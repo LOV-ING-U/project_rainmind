@@ -1,4 +1,4 @@
-package com.project.rainmind.weather.weatherfetch.dto
+package com.project.rainmind.weather.dto
 
 import io.swagger.v3.oas.annotations.media.Schema
 

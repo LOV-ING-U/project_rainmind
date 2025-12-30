@@ -1,6 +1,6 @@
-package com.project.rainmind.weather.weatherfetch.repository
+package com.project.rainmind.weather.repository
 
-import com.project.rainmind.weather.weatherfetch.entity.WeatherForecast
+import com.project.rainmind.weather.entity.WeatherForecast
 import org.springframework.data.jdbc.repository.query.Query
 import org.springframework.data.repository.ListCrudRepository
 import java.time.LocalDateTime

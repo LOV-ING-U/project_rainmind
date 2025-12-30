@@ -1,10 +1,10 @@
-package com.project.rainmind.weather.weatherfetch.service
+package com.project.rainmind.weather.service
 
-import com.project.rainmind.weather.weatherfetch.InvalidRegionNameException
-import com.project.rainmind.weather.weatherfetch.dto.DayWeatherForecastResponse
-import com.project.rainmind.weather.weatherfetch.dto.WeatherForecastItem
-import com.project.rainmind.weather.weatherfetch.repository.LocationRepository
-import com.project.rainmind.weather.weatherfetch.repository.WeatherForecastRepository
+import com.project.rainmind.weather.InvalidRegionNameException
+import com.project.rainmind.weather.dto.DayWeatherForecastResponse
+import com.project.rainmind.weather.dto.WeatherForecastItem
+import com.project.rainmind.weather.repository.LocationRepository
+import com.project.rainmind.weather.repository.WeatherForecastRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalTime
