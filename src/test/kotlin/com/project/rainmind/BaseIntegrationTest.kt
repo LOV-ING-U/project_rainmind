@@ -198,8 +198,8 @@ class BaseIntegrationTest
                     .contentType(MediaType.APPLICATION_JSON)
             ).andExpect(status().isCreated)
 
-            val nickname2 = "iamuser1"
-            val password2 = "iamuser1password"
+            val nickname2 = "iamuser2"
+            val password2 = "iamuser2password"
             val user2SignUpRequest = UserSignUpRequest(nickname2, password2, regionName)
             mvc.perform(
                 post("/v1/auth/user/register")
@@ -218,7 +218,7 @@ class BaseIntegrationTest
                 post("/v1/schedules/create")
                     .content(objectMapper.writeValueAsString(schedule1))
                     .contentType(MediaType.APPLICATION_JSON)
-            ).andExpect(status().isOk)
+            ).andExpect(status().isUnauthorized)
 
             // user1, 2 login and create schedule each 1
             // user1
@@ -231,7 +231,7 @@ class BaseIntegrationTest
             val user1token = objectMapper.readValue(loginResult1.response.contentAsString, UserLogInResponse::class.java).token
 
             val user1scheduleCreateResponse = mvc.perform(
-                post("/v1/schedules/create")
+                post("/v1/schedules")
                     .header("Authorization", "Bearer $user1token")
                     .content(objectMapper.writeValueAsString(schedule1))
                     .contentType(MediaType.APPLICATION_JSON)
@@ -253,7 +253,7 @@ class BaseIntegrationTest
                 endAt = LocalDateTime.now().plusHours(2)
             )
             mvc.perform(
-                post("/v1/schedules/create")
+                post("/v1/schedules")
                     .header("Authorization", "Bearer $user2token")
                     .content(objectMapper.writeValueAsString(schedule2))
                     .contentType(MediaType.APPLICATION_JSON)
