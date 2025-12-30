@@ -1,10 +1,8 @@
-package com.project.rainmind.weather.weatherfetch.controller
+package com.project.rainmind.weather.controller
 
-import com.project.rainmind.weather.weatherfetch.dto.WeatherFutureFetchResponse
-import com.project.rainmind.weather.weatherfetch.dto.WeatherNowFetchResponse
-import com.project.rainmind.weather.weatherfetch.service.WeatherFetchService
-import org.springframework.http.ResponseEntity
-import org.springframework.scheduling.annotation.Scheduled
+import com.project.rainmind.weather.dto.WeatherFutureFetchResponse
+import com.project.rainmind.weather.dto.WeatherNowFetchResponse
+import com.project.rainmind.weather.service.WeatherFetchService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RequestMapping

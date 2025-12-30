@@ -1,4 +1,4 @@
-package com.project.rainmind.weather.weatherfetch
+package com.project.rainmind.weather
 
 import com.project.rainmind.exception.GlobalException
 import org.springframework.http.HttpStatus

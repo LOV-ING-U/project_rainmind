@@ -1,13 +1,13 @@
-package com.project.rainmind.weather.weatherfetch.service
+package com.project.rainmind.weather.service
 
-import com.project.rainmind.weather.weatherfetch.ExternalWeatherFetchErrorException
-import com.project.rainmind.weather.weatherfetch.KmaExternalFetchClient
-import com.project.rainmind.weather.weatherfetch.InvalidRegionNameException
-import com.project.rainmind.weather.weatherfetch.dto.WeatherFutureFetchResponse
-import com.project.rainmind.weather.weatherfetch.dto.WeatherNowFetchResponse
-import com.project.rainmind.weather.weatherfetch.entity.WeatherForecast
-import com.project.rainmind.weather.weatherfetch.repository.LocationRepository
-import com.project.rainmind.weather.weatherfetch.repository.WeatherForecastRepository
+import com.project.rainmind.weather.ExternalWeatherFetchErrorException
+import com.project.rainmind.weather.KmaExternalFetchClient
+import com.project.rainmind.weather.InvalidRegionNameException
+import com.project.rainmind.weather.dto.WeatherFutureFetchResponse
+import com.project.rainmind.weather.dto.WeatherNowFetchResponse
+import com.project.rainmind.weather.entity.WeatherForecast
+import com.project.rainmind.weather.repository.LocationRepository
+import com.project.rainmind.weather.repository.WeatherForecastRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime

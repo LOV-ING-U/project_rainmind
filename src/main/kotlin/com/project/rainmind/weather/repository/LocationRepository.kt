@@ -1,6 +1,6 @@
-package com.project.rainmind.weather.weatherfetch.repository
+package com.project.rainmind.weather.repository
 
-import com.project.rainmind.weather.weatherfetch.entity.Location
+import com.project.rainmind.weather.entity.Location
 import org.springframework.data.repository.ListCrudRepository
 
 interface LocationRepository : ListCrudRepository<Location, Long> {

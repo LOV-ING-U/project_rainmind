@@ -1,7 +1,7 @@
-package com.project.rainmind.weather.weatherfetch
+package com.project.rainmind.weather
 
-import com.project.rainmind.weather.weatherfetch.dto.KmaWeatherFutureFetchResponse
-import com.project.rainmind.weather.weatherfetch.dto.KmaWeatherNowFetchResponse
+import com.project.rainmind.weather.dto.KmaWeatherFutureFetchResponse
+import com.project.rainmind.weather.dto.KmaWeatherNowFetchResponse
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import org.springframework.beans.factory.annotation.Value
