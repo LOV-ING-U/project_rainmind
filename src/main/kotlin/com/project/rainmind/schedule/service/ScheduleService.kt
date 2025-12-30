@@ -2,6 +2,7 @@ package com.project.rainmind.schedule.service
 
 import com.project.rainmind.schedule.InvalidScheduleStartAndEndTimeException
 import com.project.rainmind.schedule.ScheduleNotFoundException
+import com.project.rainmind.schedule.TooManySchedulesException
 import com.project.rainmind.schedule.dto.ScheduleCreateResponse
 import com.project.rainmind.schedule.dto.ScheduleDeleteResponse
 import com.project.rainmind.schedule.entity.Schedule
@@ -33,6 +34,7 @@ class ScheduleService (
         val locationExists = locationRepository.existsById(locationId)
         if(!locationExists) throw InvalidRegionNameException()
 
+        if(scheduleRepository.findAll().size >= 30) throw TooManySchedulesException()
         if(startAt.isAfter(endAt)) throw InvalidScheduleStartAndEndTimeException()
 
         val save = scheduleRepository.save(

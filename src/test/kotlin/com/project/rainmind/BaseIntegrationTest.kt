@@ -260,6 +260,7 @@ class BaseIntegrationTest
             ).andExpect(status().isCreated)
 
             // user2 tries to delete user1 schedule
+            // expected : not found
             val user1scheduleId = objectMapper.readValue(user1scheduleCreateResponse.response.contentAsString, ScheduleCreateResponse::class.java).scheduleId
             mvc.perform(
                 delete("/v1/schedules/$user1scheduleId")
