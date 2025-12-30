@@ -14,12 +14,13 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.testcontainers.junit.jupiter.Testcontainers
 import kotlin.test.Test
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.project.rainmind.schedule.dto.ScheduleCreateRequest
+import com.project.rainmind.schedule.dto.ScheduleCreateResponse
 import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -168,5 +169,107 @@ class BaseIntegrationTest
                     .content(objectMapper.writeValueAsString(userSignUpRequest))
                     .contentType(MediaType.APPLICATION_JSON)
             ).andExpect(status().isBadRequest)
+        }
+
+        @Test
+        fun `two users register, create schedule, approach other user schedule and denied, delete schedule`() {
+            val regionName = "서울대학교"
+
+            // location 등록
+            val location = locationRepository.save(
+                Location(
+                    regionName = "서울대학교",
+                    latitude = 37.49,
+                    longitude = 126.93,
+                    nx = 59,
+                    ny = 125,
+                    createdAt = LocalDateTime.now(),
+                    updatedAt = LocalDateTime.now()
+                )
+            )
+
+            // user1, 2 create
+            val nickname1 = "iamuser1"
+            val password1 = "iamuser1password"
+            val user1SignUpRequest = UserSignUpRequest(nickname1, password1, regionName)
+            mvc.perform(
+                post("/v1/auth/user/register")
+                    .content(objectMapper.writeValueAsString(user1SignUpRequest))
+                    .contentType(MediaType.APPLICATION_JSON)
+            ).andExpect(status().isCreated)
+
+            val nickname2 = "iamuser1"
+            val password2 = "iamuser1password"
+            val user2SignUpRequest = UserSignUpRequest(nickname2, password2, regionName)
+            mvc.perform(
+                post("/v1/auth/user/register")
+                    .content(objectMapper.writeValueAsString(user2SignUpRequest))
+                    .contentType(MediaType.APPLICATION_JSON)
+            ).andExpect(status().isCreated)
+
+            // user1 create schedule(not login)
+            val schedule1 = ScheduleCreateRequest(
+                title = "프로젝트 미팅",
+                locationId = location.id!!,
+                startAt = LocalDateTime.now(),
+                endAt = LocalDateTime.now().plusMinutes(30)
+            )
+            mvc.perform(
+                post("/v1/schedules/create")
+                    .content(objectMapper.writeValueAsString(schedule1))
+                    .contentType(MediaType.APPLICATION_JSON)
+            ).andExpect(status().isOk)
+
+            // user1, 2 login and create schedule each 1
+            // user1
+            val user1LogInRequest = UserLogInRequest(nickname1, password1)
+            val loginResult1 = mvc.perform(
+                post("/v1/auth/user/login")
+                    .content(objectMapper.writeValueAsString(user1LogInRequest))
+                    .contentType(MediaType.APPLICATION_JSON)
+            ).andExpect(status().isOk).andReturn()
+            val user1token = objectMapper.readValue(loginResult1.response.contentAsString, UserLogInResponse::class.java).token
+
+            val user1scheduleCreateResponse = mvc.perform(
+                post("/v1/schedules/create")
+                    .header("Authorization", "Bearer $user1token")
+                    .content(objectMapper.writeValueAsString(schedule1))
+                    .contentType(MediaType.APPLICATION_JSON)
+            ).andExpect(status().isCreated).andReturn()
+
+            // user2
+            val user2LogInRequest = UserLogInRequest(nickname2, password2)
+            val loginResult2 = mvc.perform(
+                post("/v1/auth/user/login")
+                    .content(objectMapper.writeValueAsString(user2LogInRequest))
+                    .contentType(MediaType.APPLICATION_JSON)
+            ).andExpect(status().isOk).andReturn()
+            val user2token = objectMapper.readValue(loginResult2.response.contentAsString, UserLogInResponse::class.java).token
+
+            val schedule2 = ScheduleCreateRequest(
+                title = "학과 수강지도",
+                locationId = location.id!!,
+                startAt = LocalDateTime.now().plusHours(1),
+                endAt = LocalDateTime.now().plusHours(2)
+            )
+            mvc.perform(
+                post("/v1/schedules/create")
+                    .header("Authorization", "Bearer $user2token")
+                    .content(objectMapper.writeValueAsString(schedule2))
+                    .contentType(MediaType.APPLICATION_JSON)
+            ).andExpect(status().isCreated)
+
+            // user2 tries to delete user1 schedule
+            val user1scheduleId = objectMapper.readValue(user1scheduleCreateResponse.response.contentAsString, ScheduleCreateResponse::class.java).scheduleId
+            mvc.perform(
+                delete("/v1/schedules/$user1scheduleId")
+                    .header("Authorization", "Bearer $user2token")
+            ).andExpect(status().isNotFound)
+
+            // user1 tries to delete user1 schedule
+            mvc.perform(
+                delete("/v1/schedules/$user1scheduleId")
+                    .header("Authorization", "Bearer $user1token")
+            ).andExpect(status().isOk).andExpect(jsonPath("$.deletedScheduleId").value(user1scheduleId))
         }
     }

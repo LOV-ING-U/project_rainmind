@@ -7,4 +7,8 @@ interface LocationRepository : ListCrudRepository<Location, Long> {
     fun findByRegionName(
         regionName: String
     ): Location?
+
+    override fun existsById(
+        id: Long
+    ): Boolean
 }
