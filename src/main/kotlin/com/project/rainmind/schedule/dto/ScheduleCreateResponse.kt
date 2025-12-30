@@ -1,5 +1,8 @@
 package com.project.rainmind.schedule.dto
 
-data class ScheduleCreateResponse (
+import io.swagger.v3.oas.annotations.media.Schema
 
+@Schema(description = "생성된 schedule id")
+data class ScheduleCreateResponse (
+    val scheduleId: Long
 )
