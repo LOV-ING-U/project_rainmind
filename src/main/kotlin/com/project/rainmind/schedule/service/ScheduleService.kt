@@ -1,5 +1,6 @@
 package com.project.rainmind.schedule.service
 
+import com.project.rainmind.alarm.NotifyQueueService
 import com.project.rainmind.schedule.InvalidScheduleStartAndEndTimeException
 import com.project.rainmind.schedule.ScheduleNotFoundException
 import com.project.rainmind.schedule.TooManySchedulesException
@@ -14,12 +15,14 @@ import com.project.rainmind.weather.repository.LocationRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Service
 class ScheduleService (
     private val scheduleRepository: ScheduleRepository,
     private val locationRepository: LocationRepository,
-    private val userLogInRepository: UserLogInRepository
+    private val userLogInRepository: UserLogInRepository,
+    private val notifyQueueService: NotifyQueueService
 ) {
     @Transactional
     fun createSchedule(
@@ -47,6 +50,12 @@ class ScheduleService (
             )
         )
 
+        // register alarm at redis
+        // 중간에 실패하면 이건 어떻게 됨?
+        val alarmAt = save.startAt.minusMinutes(30)
+        val notifyAt = alarmAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        notifyQueueService.enqueueAlarm(sss)
+
         return ScheduleCreateResponse(
             scheduleId = save.id!!
         )
@@ -61,6 +70,9 @@ class ScheduleService (
 
         val schedule = scheduleRepository.findByIdAndUserId(scheduleId, user.id!!) ?: throw ScheduleNotFoundException()
         scheduleRepository.deleteById(schedule.id!!)
+
+        // dequeue
+        notifyQueueService.dequeueAlarm(...)
 
         return ScheduleDeleteResponse(
             deletedScheduleId = schedule.id!!
