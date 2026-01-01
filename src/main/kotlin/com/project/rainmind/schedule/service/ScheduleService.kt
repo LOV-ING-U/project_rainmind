@@ -52,9 +52,10 @@ class ScheduleService (
 
         // register alarm at redis
         // 중간에 실패하면 이건 어떻게 됨?
+        // 지정된 곳의 로컬 시간대 = notifyAt
         val alarmAt = save.startAt.minusMinutes(30)
         val notifyAt = alarmAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        notifyQueueService.enqueueAlarm(sss)
+        notifyQueueService.enqueueAlarm(save.id!!, notifyAt)
 
         return ScheduleCreateResponse(
             scheduleId = save.id!!
@@ -72,7 +73,7 @@ class ScheduleService (
         scheduleRepository.deleteById(schedule.id!!)
 
         // dequeue
-        notifyQueueService.dequeueAlarm(...)
+        notifyQueueService.dequeueAlarm(schedule.id!!)
 
         return ScheduleDeleteResponse(
             deletedScheduleId = schedule.id!!
