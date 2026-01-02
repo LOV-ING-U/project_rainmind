@@ -2,10 +2,13 @@ package com.project.rainmind.alarm
 
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.stereotype.Service
+import com.fasterxml.jackson.databind.ObjectMapper
+import java.time.ZoneId
 
 @Service
 class NotifyQueueService (
-    private val stringRedisTemplate: StringRedisTemplate
+    private val stringRedisTemplate: StringRedisTemplate,
+    private val objectMapper: ObjectMapper
 ) {
     // redis zset 사용
     // key: 알림 모음(= alarm:at 고정)
@@ -14,10 +17,14 @@ class NotifyQueueService (
     private val ZSET_KEY = "alarm:at"
 
     fun enqueueAlarm(
-        scheduleId: Long,
-        notifyAtMs: Long
+        notifyAlarmPayload: NotifyAlarmPayload
     ) {
-        stringRedisTemplate.opsForZSet().add(ZSET_KEY, scheduleId.toString(), notifyAtMs.toDouble())
+        // 직렬화(JSON)
+        val json = objectMapper.writeValueAsString(notifyAlarmPayload)
+
+        // ZSET에 저장
+        val score = notifyAlarmPayload.alarmAt.atZone(ZoneId.of("Asia/Seoul")).toInstant().toEpochMilli().toDouble()
+        stringRedisTemplate.opsForZSet().add(ZSET_KEY, json, score)
     }
 
     fun dequeueAlarm(
