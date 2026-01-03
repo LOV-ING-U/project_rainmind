@@ -72,6 +72,7 @@ class BaseIntegrationTest
             ).andExpect(status().isOk).andReturn()
 
             // token 추출, logout 테스트
+            // readValue = 역직렬화(JSON, String -> class)
             val token = objectMapper.readValue(loginResult.response.contentAsString, UserLogInResponse::class.java).token
             val bearer_token = "Bearer $token"
             mvc.perform(

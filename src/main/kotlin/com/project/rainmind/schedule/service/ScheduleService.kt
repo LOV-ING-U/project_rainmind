@@ -1,6 +1,6 @@
 package com.project.rainmind.schedule.service
 
-import com.project.rainmind.alarm.NotifyQueueService
+import com.project.rainmind.alarm.service.NotifyQueueService
 import com.project.rainmind.schedule.InvalidScheduleStartAndEndTimeException
 import com.project.rainmind.schedule.ScheduleNotFoundException
 import com.project.rainmind.schedule.TooManySchedulesException
