@@ -8,4 +8,8 @@ interface AlarmOutboxRepository : CrudRepository<AlarmOutbox, Long>{
     fun findByStatus(
         status: AlarmOutboxStatus
     ): List<AlarmOutbox>
+
+    fun findAllByScheduleId(
+        scheduleId: Long
+    ): List<AlarmOutbox>
 }

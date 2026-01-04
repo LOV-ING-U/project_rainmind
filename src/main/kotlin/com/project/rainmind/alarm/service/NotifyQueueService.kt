@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.project.rainmind.alarm.AlarmOutboxStatus
 import com.project.rainmind.alarm.NotifyAlarmPayload
 import com.project.rainmind.alarm.entity.AlarmOutbox
+import com.project.rainmind.alarm.event.DeleteAlarmEvent
 import com.project.rainmind.alarm.repository.AlarmOutboxRepository
 import org.springframework.data.redis.core.script.DefaultRedisScript
 import org.springframework.scheduling.annotation.Scheduled
@@ -56,6 +57,15 @@ class NotifyQueueService (
             // enqueue 성공
             outbox.status = AlarmOutboxStatus.SENT
             alarmOutboxRepository.save(outbox)
+        } catch (e: Exception) { } // 실패
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    fun removeAfterCommit(
+        event: DeleteAlarmEvent
+    ) {
+        try {
+            stringRedisTemplate.opsForZSet().remove(ZSET_KEY, event.payload)
         } catch (e: Exception) { } // 실패
     }
 

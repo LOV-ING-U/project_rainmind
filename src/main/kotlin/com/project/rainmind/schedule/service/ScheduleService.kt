@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import com.project.rainmind.alarm.entity.AlarmOutbox
+import com.project.rainmind.alarm.event.DeleteAlarmEvent
 import org.springframework.context.ApplicationEventPublisher
 
 @Service
@@ -91,6 +92,20 @@ class ScheduleService (
 
         val schedule = scheduleRepository.findByIdAndUserId(scheduleId, user.id!!) ?: throw ScheduleNotFoundException()
         scheduleRepository.deleteById(schedule.id!!)
+
+        // delete at outbox(deleted)
+        val outboxes = alarmOutboxRepository.findAllByScheduleId(schedule.id!!)
+        for(outbox in outboxes) {
+            outbox.status = AlarmOutboxStatus.DELETED
+            alarmOutboxRepository.save(outbox)
+
+            applicationEventPublisher.publishEvent(
+                DeleteAlarmEvent(
+                    scheduleId = schedule.id!!,
+                    payload = outbox.payload
+                )
+            )
+        }
 
         return ScheduleDeleteResponse(
             deletedScheduleId = schedule.id!!
