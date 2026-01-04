@@ -1,8 +1,12 @@
 package com.project.rainmind
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.project.rainmind.alarm.AlarmOutboxStatus
+import com.project.rainmind.alarm.NotifyAlarmPayload
 import com.project.rainmind.alarm.NotifyAlarmWorker
+import com.project.rainmind.alarm.entity.AlarmOutbox
 import com.project.rainmind.alarm.repository.AlarmOutboxRepository
+import com.project.rainmind.alarm.service.NotifyQueueService
 import com.project.rainmind.helper.BaseIntegrationTestContainers
 import com.project.rainmind.schedule.dto.ScheduleCreateRequest
 import com.project.rainmind.schedule.dto.ScheduleCreateResponse
@@ -37,13 +41,13 @@ class AlarmWorkerIntegrationTest
     @Autowired
     constructor(
         private val locationRepository: LocationRepository,
-        private val userLogInRepository: UserLogInRepository,
         private val scheduleRepository: ScheduleRepository,
         private val mvc: MockMvc,
         private val objectMapper: ObjectMapper,
         private val alarmOutboxRepository: AlarmOutboxRepository,
         private val stringRedisTemplate: StringRedisTemplate,
-        private val notifyAlarmWorker: NotifyAlarmWorker
+        private val notifyAlarmWorker: NotifyAlarmWorker,
+        private val notifyQueueService: NotifyQueueService
         ): BaseIntegrationTestContainers() {
     private val username = "test-user-name"
     private val password = "test-password"
@@ -52,6 +56,7 @@ class AlarmWorkerIntegrationTest
     @Test
     // schedule 생성, outbox 생성, redis enqueue, worker 처리
     // schedule delete, outbox 상태 변화, redis dequeue, worker 처리
+    // 추가로 retryPending() 의 복구 동작 확인
     fun `make schedule, make outbox, enqueue redis, call worker, delete schedule, state change outbox, dequeue redis, call worker`(
         output: CapturedOutput
     ) {
@@ -167,6 +172,57 @@ class AlarmWorkerIntegrationTest
 
         val out2 = output.out
         println(out2)
+
+        // 이번엔 enqueueAfterCommit 실패시킴(즉 redis 삽입을 의도적으로 실패시킴)
+        val brokenJSON = """
+            {"scheduleId" : 1,
+            "alarmAt" : "SS
+        """
+
+        // 일부러 깨진 json 을 삽입한다
+        val outbox = alarmOutboxRepository.save(
+            AlarmOutbox(
+                scheduleId = 100L,
+                payload = brokenJSON,
+                status = AlarmOutboxStatus.PENDING,
+                createdAt = now
+            )
+        )
+
+        // retryPending 복구 동작 확인
+        // 첫 호출: objectMapper.readValue() 에서 깨진다(try - catch)
+        // 즉 retryPending 이후 여전히 PENDING, redis 에 존재x
+        notifyQueueService.retryPending()
+        val outbox3 = alarmOutboxRepository.findById(outbox.id!!).orElseThrow()
+        assertEquals(AlarmOutboxStatus.PENDING, outbox3.status)
+
+        val redisScore = stringRedisTemplate.opsForZSet().score(ZSET_KEY, brokenJSON)
+        assertNull(redisScore)
+
+        val correctJSON = NotifyAlarmPayload(
+            scheduleId = 100L,
+            userId = 100L,
+            title = "retry",
+            regionName = "서울대학교",
+            nx = 59,
+            ny = 125,
+            startAt = now,
+            alarmAt = now.minusMinutes(1)
+        )
+
+        val correctPayload = objectMapper.writeValueAsString(correctJSON)
+        outbox.payload = correctPayload
+        alarmOutboxRepository.save(outbox)
+
+        // 다시 retryPending() 실행 -> redis 에 삽입되며, status 가 SENT
+        notifyQueueService.retryPending()
+
+        val outbox4 = alarmOutboxRepository.findById(outbox.id!!).orElseThrow()
+        assertEquals(AlarmOutboxStatus.SENT, outbox4.status)
+
+        val score4 = stringRedisTemplate.opsForZSet().score(ZSET_KEY, correctPayload)
+        assertNotNull(score4)
+        println(score4)
     }
 
     // return login token
