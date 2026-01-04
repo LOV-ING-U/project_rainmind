@@ -73,7 +73,7 @@ class NotifyQueueService (
     // 단, 현재 호출하는 시각 이전 알람이어야 함
     // 삭제는 원자적이지 못함. 따라서 Lua script 등을 사용해야함.
     fun dequeue(): String? {
-        val nowTime = System.currentTimeMillis().toDouble()
+        val nowTime = System.currentTimeMillis().toDouble().toString()
 
         return stringRedisTemplate.execute(
             deqSyncLua,

@@ -12,4 +12,6 @@ interface AlarmOutboxRepository : CrudRepository<AlarmOutbox, Long>{
     fun findAllByScheduleId(
         scheduleId: Long
     ): List<AlarmOutbox>
+
+    fun existsByScheduleId(scheduleId: Long): Boolean
 }

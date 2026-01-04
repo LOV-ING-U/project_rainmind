@@ -26,4 +26,7 @@ class NotifyAlarmWorker (
         if(schedule.isEmpty) return
         println("[Notify alarm before 30 minutes] : start time = ${schedule.get().startAt}, title = ${schedule.get().title}")
     }
+
+    // only for testing
+    fun runOnceOnTest() = sendAlarm()
 }
