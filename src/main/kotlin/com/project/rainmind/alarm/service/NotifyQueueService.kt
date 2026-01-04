@@ -7,6 +7,7 @@ import com.project.rainmind.alarm.AlarmOutboxStatus
 import com.project.rainmind.alarm.NotifyAlarmPayload
 import com.project.rainmind.alarm.entity.AlarmOutbox
 import com.project.rainmind.alarm.repository.AlarmOutboxRepository
+import org.springframework.data.redis.core.script.DefaultRedisScript
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
@@ -22,7 +23,24 @@ class NotifyQueueService (
     // key: 알림 모음(= alarm:at 고정)
     // value: 알림들 집합(각 알람들은 이름/score 로 구성됨)
     // score 정렬된 상태로 유지(sorted set)
+    // deque 원자성 위한 lua script 도입
     private val ZSET_KEY = "alarm:queue"
+    private var scriptLua = """
+            local key = KEYS[1]
+            local now = tonumber(ARGV[1])
+            
+            local items = redis.call('ZRANGEBYSCORE', key, '-inf', now, 'LIMIT', 0, 1)
+            if (#items == 0) then
+                return nil
+            end
+            
+            redis.call('ZREM', key, items[1])
+            return items[1]
+        """.trimIndent()
+    private val deqSyncLua: DefaultRedisScript<String> = DefaultRedisScript<String>().apply {
+        resultType = String::class.java
+        setScriptText(scriptLua)
+    }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     fun enqueueAfterCommit(
@@ -47,14 +65,11 @@ class NotifyQueueService (
     fun dequeue(): String? {
         val nowTime = System.currentTimeMillis().toDouble()
 
-        // dequeue
-        // 최소/최대 이상/이하(경계 포함) 내에서, offset(index 번호)부터 count 개수만큼 조회
-        val alarm = stringRedisTemplate.opsForZSet().rangeByScore(ZSET_KEY, 0.0, nowTime, 0, 1)?.firstOrNull()
-        if(alarm == null) return null
-        else {
-            stringRedisTemplate.opsForZSet().remove(ZSET_KEY, alarm)
-            return alarm
-        }
+        return stringRedisTemplate.execute(
+            deqSyncLua,
+            listOf(ZSET_KEY),
+            nowTime
+        )
     }
 
     // commit 이후 redis 에 enqueue 실패시 남은 PENDING 들을 성공할때까지 재시도

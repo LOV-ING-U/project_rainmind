@@ -1,6 +1,9 @@
 package com.project.rainmind.schedule.service
 
-import com.project.rainmind.alarm.service.NotifyQueueService
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.project.rainmind.alarm.AlarmOutboxStatus
+import com.project.rainmind.alarm.NotifyAlarmPayload
+import com.project.rainmind.alarm.repository.AlarmOutboxRepository
 import com.project.rainmind.schedule.InvalidScheduleStartAndEndTimeException
 import com.project.rainmind.schedule.ScheduleNotFoundException
 import com.project.rainmind.schedule.TooManySchedulesException
@@ -15,14 +18,17 @@ import com.project.rainmind.weather.repository.LocationRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
-import java.time.ZoneId
+import com.project.rainmind.alarm.entity.AlarmOutbox
+import org.springframework.context.ApplicationEventPublisher
 
 @Service
 class ScheduleService (
     private val scheduleRepository: ScheduleRepository,
     private val locationRepository: LocationRepository,
     private val userLogInRepository: UserLogInRepository,
-    private val notifyQueueService: NotifyQueueService
+    private val alarmOutboxRepository: AlarmOutboxRepository,
+    private val objectMapper: ObjectMapper,
+    private val applicationEventPublisher: ApplicationEventPublisher
 ) {
     @Transactional
     fun createSchedule(
@@ -34,8 +40,7 @@ class ScheduleService (
     ): ScheduleCreateResponse {
         val user = userLogInRepository.findByNickname(nickname) ?: throw NonExistingUsernameException()
 
-        val locationExists = locationRepository.existsById(locationId)
-        if(!locationExists) throw InvalidRegionNameException()
+        val location = locationRepository.findById(locationId).orElse(null) ?: throw InvalidRegionNameException()
 
         if(scheduleRepository.findAll().size >= 30) throw TooManySchedulesException()
         if(startAt.isAfter(endAt)) throw InvalidScheduleStartAndEndTimeException()
@@ -50,13 +55,28 @@ class ScheduleService (
             )
         )
 
-        // register alarm at redis
-        // 중간에 실패하면 이건 어떻게 됨?
-        // 지정된 곳의 로컬 시간대 = notifyAt
+        // outbox DB에 등록
         val alarmAt = save.startAt.minusMinutes(30)
-        val notifyAt = alarmAt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        notifyQueueService.enqueueAlarm(save.id!!, notifyAt)
+        val payload = NotifyAlarmPayload(
+            scheduleId = save.id!!,
+            userId = user.id!!,
+            title = title,
+            regionName = location.regionName,
+            nx = location.nx,
+            ny = location.ny,
+            startAt = save.startAt,
+            alarmAt = alarmAt
+        )
 
+        val savedOutbox = alarmOutboxRepository.save(
+            AlarmOutbox(
+                scheduleId = save.id!!,
+                payload = objectMapper.writeValueAsString(payload),
+                status = AlarmOutboxStatus.PENDING,
+            )
+        )
+
+        applicationEventPublisher.publishEvent(savedOutbox)
         return ScheduleCreateResponse(
             scheduleId = save.id!!
         )
@@ -71,9 +91,6 @@ class ScheduleService (
 
         val schedule = scheduleRepository.findByIdAndUserId(scheduleId, user.id!!) ?: throw ScheduleNotFoundException()
         scheduleRepository.deleteById(schedule.id!!)
-
-        // dequeue
-        notifyQueueService.dequeueAlarm(schedule.id!!)
 
         return ScheduleDeleteResponse(
             deletedScheduleId = schedule.id!!

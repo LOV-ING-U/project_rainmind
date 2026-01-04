@@ -23,7 +23,7 @@ class NotifyAlarmWorker (
         val payload = objectMapper.readValue(alarm, NotifyAlarmPayload::class.java)
         val schedule = scheduleRepository.findById(payload.scheduleId)
 
-        if(schedule == null) return
+        if(schedule.isEmpty) return
         println("[Notify alarm before 30 minutes] : start time = ${schedule.get().startAt}, title = ${schedule.get().title}")
     }
 }
