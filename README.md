@@ -7,7 +7,7 @@
 - 문제 정의   
 - 시스템 흐름  
 - 기술적 의사결정  
-- 트러블 슈팅  
+- 트러블 슈팅 및 주요 코드 포인트  
 - 실행 방법  
   
 ## 1. 프로젝트 개요  
@@ -17,4 +17,12 @@ RainMind는 일정(Schedule) 생성 시 알림을 예약하고, 지정된 시점
   
 본 프로젝트는 이후 FastAPI 기반, 동일한 알림 처리 서비스를 제공하는 프로젝트의 원본에 해당합니다. FastAPI 버전 Repository: https://github.com/LOV-ING-U/rainmind_fastapi  
   
-## 2. 
+## 2. 전체 아키텍처  
+![arcihitecture](./img/rainmind.png)  
+  
+- Client 요청  
+- Spring API Server 요청 수신  
+- RDB (Schedule, Alarm Outbox) 삽입/삭제 및 Event 발생  
+- Transactional Event Listener의 Event handle 및 Redis ZSet 조작  
+- Alarm Worker의 alarm 출력, Client 응답 전송  
+  
