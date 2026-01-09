@@ -181,7 +181,7 @@ class BaseIntegrationTest
             // location 등록
             val location = locationRepository.save(
                 Location(
-                    regionName = "서울대학교",
+                    regionName = "서울대학교11",
                     latitude = 37.49,
                     longitude = 126.93,
                     nx = 59,
