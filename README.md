@@ -91,7 +91,16 @@ class GlobalException -> class ScheduleException, class UserException, ...(inher
 exception 발생 시 class GlobalExceptionHandler 로 이동하여 HTTP 응답 메시지 생성  
 ```  
   
-## 7. 한계  
-현재로서는 alarm dequeue 이후 장애에 의해 알람이 유실될 경우를 복구할 로직이 없습니다.  
+## 7. 한계 및 trade off  
+Alarm dequeue 이후 장애에 의해 알람이 유실될 경우가 존재합니다. Redis dequeue 이후 worker 장애 시 유실 가능성을 허용(At most once)한 설계이며, 알림 시스템 특성상 이를 위한 복잡한 상태 관리보다는 코드의 단순함과 운영 안정성을 우선하도록 했습니다.  
   
-## 8. 실행 방법
+## 8. 실행 방법  
+프로젝트의 핵심 기능을 테스트할 수 있는 테스트 코드가 존재합니다. 테스트 항목은 로그인/로그아웃/회원가입, Redis 알람 등록/삭제 확인 과정입니다. 아래 과정을 통해 테스트할 수 있습니다.  
+  
+1) docker 실행
+2) docker 띄우기  
+docker compose up -d  
+3) 테스트 코드 실행  
+@Test 어노테이션 코드 라인 부분 버튼 클릭  
+  
+실제 기상청 API를 호출하는 로직 또한 테스트 코드 내부에 존재하나, 해당 테스트는 기상청 API 인증키를 필요로 하는 관계로 주석으로만 명시하였습니다.

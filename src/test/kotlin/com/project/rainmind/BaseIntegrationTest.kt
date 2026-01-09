@@ -97,6 +97,8 @@ class BaseIntegrationTest
                     .contentType(MediaType.APPLICATION_JSON)
             ).andExpect(status().isOk).andReturn()
 
+            /*
+
             // 초단기실황조회 호출
             val token2 = objectMapper.readValue(loginResult2.response.contentAsString, UserLogInResponse::class.java).token
             val bearer_token2 = "Bearer $token2"
@@ -141,7 +143,7 @@ class BaseIntegrationTest
                     .param("regionName", regionName)
                     .param("date", date)
                     .param("time", time)
-            ).andExpect(status().isOk)
+            ).andExpect(status().isOk) */
         }
 
         @Test
