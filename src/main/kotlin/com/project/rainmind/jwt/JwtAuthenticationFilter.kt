@@ -9,7 +9,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
+import org.springframework.stereotype.Component
 
+@Component
 class JwtAuthenticationFilter (
     private val jwtTokenProvider: JwtTokenProvider,
     private val stringRedisTemplate: StringRedisTemplate

@@ -23,6 +23,10 @@ class SecurityConfig (
         val jwtAuthenticationFilter = JwtAuthenticationFilter(jwtTokenProvider, stringRedisTemplate)
         http.csrf {
             it.disable() // 세션 기반 인증 아님
+        }.formLogin {
+            it.disable() // 스프링 시큐리티 기본 제공 방식 사용x (커스텀 JWT)
+        }.httpBasic {
+            it.disable() // httpBasic 방식x, JWT
         }.sessionManagement { // stateless
             it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         }.authorizeHttpRequests { auth ->
