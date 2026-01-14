@@ -1,7 +1,9 @@
 package com.project.rainmind.exception
 
 import com.project.rainmind.exception.dto.ErrorResponse
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.bind.annotation.ExceptionHandler
 
@@ -20,4 +22,15 @@ class GlobalExceptionHandler {
                 err_code_internal = e.http_errCode_cause
             )
         )
+
+    // @Valid 실패 시, 실행
+    @ExceptionHandler(MethodArgumentNotValidException::class)
+    fun handleValidation(
+        e: MethodArgumentNotValidException
+    ): ResponseEntity<ErrorResponse> = ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+        ErrorResponse( // 검증 오류결과 . 필드 오류 리스트. 첫번째 에러 ?. 설정된 기본 메시지 ?: 메시지 없으면 기본값
+            errMessage = e.bindingResult.fieldErrors.firstOrNull()?.defaultMessage ?: "Invalid request",
+            err_code_internal = 11
+        )
+    )
 }
