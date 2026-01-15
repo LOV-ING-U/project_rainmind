@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 class OutboxRetryPendingWorker (
     private val notifyQueueService: NotifyQueueService
 ) {
-    @Scheduled(fixedDelay = 10000) // 1분마다
+    @Scheduled(fixedDelay = 10000) // 10초마다
     @SchedulerLock(
         name = "outboxRetryPendingLock",
         lockAtMostFor = "PT30S" // 너무 짧게 설정하면,, process 하나가 redis 삽입하다가 락 풀리면
