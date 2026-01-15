@@ -6,7 +6,6 @@ import com.project.rainmind.schedule.repository.ScheduleRepository
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.time.Instant
 
 @Component
 class NotifyAlarmWorker (
@@ -18,7 +17,11 @@ class NotifyAlarmWorker (
     // 60000ms 마다 실행되게 함
     // 일반적 비즈니스 로직은 http 요청이 있을때 처리되지만 알람은 그렇지않다. 따라서 worker 따로 만듬
     @Scheduled(fixedDelay = 60000)
-    @SchedulerLock(name = "RainMindScheduler")
+    @SchedulerLock(
+        name = "notifyAlarmWorkerLock",
+        lockAtMostFor = "PT10S",
+        lockAtLeastFor = "PT1S"
+    )
     fun sendAlarm() {
         val alarm = notifyQueueService.dequeue() ?: return
 

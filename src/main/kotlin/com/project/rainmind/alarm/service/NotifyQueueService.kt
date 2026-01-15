@@ -83,8 +83,8 @@ class NotifyQueueService (
     }
 
     // commit 이후 redis 에 enqueue 실패시 남은 PENDING 들을 성공할때까지 재시도
-    // enqueue 원자성 해결, dequeue 원자성 미해결
-    @Scheduled(fixedDelay = 10000)
+    // @Scheduled(fixedDelay = 10000)
+    // 그냥 떼고 scheduler 로 옮긴다. 서비스 레이어 책임이 흐려지는 느낌...
     fun retryPending() {
         val pendings = alarmOutboxRepository.findByStatus(AlarmOutboxStatus.PENDING)
 
