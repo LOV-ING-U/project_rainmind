@@ -30,7 +30,7 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
 	// shedlock
-	implementation("net.javacrumbs.shedlock:shedlock-spring:5.8.0") // shedlock & spring framework 연동
+	implementation("net.javacrumbs.shedlock:shedlock-spring:5.13.0") // shedlock & spring framework 연동
 	implementation("net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.13.0") // lock 저장소로 RDB 사용 가능하게 함
 
 	// mysql

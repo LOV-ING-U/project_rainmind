@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
-class OutboxRetryPendingWorker (
+class OutboRetryPendingWorker (
     private val notifyQueueService: NotifyQueueService
 ) {
     @Scheduled(fixedDelay = 10000) // 10초마다
