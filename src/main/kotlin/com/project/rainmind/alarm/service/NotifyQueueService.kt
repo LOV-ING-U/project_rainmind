@@ -10,6 +10,8 @@ import com.project.rainmind.alarm.event.DeleteAlarmEvent
 import com.project.rainmind.alarm.repository.AlarmOutboxRepository
 import org.springframework.data.redis.core.script.DefaultRedisScript
 import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.transaction.annotation.Propagation
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.event.TransactionPhase
 import org.springframework.transaction.event.TransactionalEventListener
 import java.time.ZoneId
@@ -43,7 +45,9 @@ class NotifyQueueService (
         setScriptText(scriptLua)
     }
 
+    // @Async? redis 장애시, 여기에서 묶여있을 수 있는데..?
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun enqueueAfterCommit(
         outbox: AlarmOutbox
     ) {
