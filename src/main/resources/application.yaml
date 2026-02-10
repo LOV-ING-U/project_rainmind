@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: rainmind
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+security:
+  jwt:
+    secret: adfasdfasdfasdfasdfasdfadfasdfasfsadfasfdsafsdfawcwesdfsadfwdsfasdfasdfasdfasdfasdfasdfasdfasdfsdfasfdfasdfasdfasdfasdfsdf
+    access-token-exp-ms: 60
+
+kma:
+  auth-key: ${KMA_AUTH_KEY}
