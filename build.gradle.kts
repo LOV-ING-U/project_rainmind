@@ -48,7 +48,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 
 	// swagger io
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.3")
 
 	// jwt
 	implementation("io.jsonwebtoken:jjwt-api:0.12.6")

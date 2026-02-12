@@ -4,7 +4,7 @@ spring:
 
   datasource:
     url: ${DB_URL}
-    username: ${DB_USERNAME}
+    username: ${DB_USERNAME:rainmind}
     password: ${DB_PASSWORD}
 
   data:
@@ -18,8 +18,12 @@ spring:
 
 security:
   jwt:
-    secret: adfasdfasdfasdfasdfasdfadfasdfasfsadfasfdsafsdfawcwesdfsadfwdsfasdfasdfasdfasdfasdfasdfasdfasdfsdfasfdfasdfasdfasdfasdfsdf
-    access-token-exp-ms: 60
+    secret: ${JWT_SECRET}
+    access-token-exp-ms: ${JWT_ACCESS_TOKEN_EXP_MS:6000000}
 
 kma:
   auth-key: ${KMA_AUTH_KEY}
+
+logging:
+  level:
+    org.springframework.security: DEBUG

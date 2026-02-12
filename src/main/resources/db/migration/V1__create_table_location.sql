@@ -11,3 +11,5 @@ CREATE TABLE IF NOT EXISTS location
 
     UNIQUE KEY location__uk_ (region_name)
 );
+
+INSERT INTO location(region_name, latitude, longitude, nx, ny, created_at, updated_at) VALUES ('seoul sinlim', 037.487426, 126.927075, 59, 125, CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6));
