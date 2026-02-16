@@ -131,7 +131,7 @@ exception 발생 시 class GlobalExceptionHandler 로 이동하여 HTTP 응답 �
 짧은 시간마다 DB 전체를 읽는 쿼리는 서버에 심한 부하를 줄 수 있으므로, Pageable 또는 Native Query를 이용하여 정해진 개수만큼 PENDING Signal을 가져오는 것이 응답시간을 줄일 수 있을 것입니다.  
   
 - **Message 발행을 안전하게 : Redis Stream vs RabbitMQ**  
-현재의 Redis ZSet 구조는 서버의 알람 발행 이후, 사용자의 도착을 보장할 방법이 없습니다. 따라서, 자체 ACK 기능을 보유한 RabbitMQ 혹은 기존 Redis를 활용한 Redis Stream을 고려 중입니다(kafka는 현재 시점에서 운영 복잡도 측면에서 앞선 선택지들보다는 우선 순위가 낮습니다).
+현재의 Redis ZSet 구조는 서버의 알람 발행 이후, 사용자의 도착을 보장할 방법이 없습니다. 따라서, 자체 ACK 기능을 보유한 RabbitMQ 혹은 기존 Redis를 활용한 Redis Stream을 고려 중입니다(kafka는 현재 시점에서 운영 복잡도 측면에서 앞선 선택지들보다는 우선 순위가 낮습니다).  
   
 - **Redis 사용 메모리 절약 : 복수의 Key 사용**  
 Redis ZSet은 데이터 개수가 적을때에는 내부적으로 zip list만을 사용합니다. 반면 데이터 개수가 일정량 이상을 넘어가면 확률적 삽입을 수행하는 skip list 및 hash table로 저장 자료구조가 바뀝니다. 따라서, 유저마다 key를 따로 두는 등의 방식을 통해 같은 양의 데이터를 저장하여도 사용하는 메모리를 훨씬 절약할 수 있을 것입니다.  
