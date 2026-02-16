@@ -65,7 +65,7 @@ RainMind는 일정(Schedule) 생성 시 알림을 예약하고, 지정된 시점
 ## 5. API 명세서 및 ER Diagram  
 **[🔗 API 명세서](https://www.notion.so/Project-RainMind-API-30973648e856802692b6f61b81ce9aef?source=copy_link)**  
 - ER Diagram  
-![erd](./pictures/ERD.JPG)  
+![erd](ERD.JPG)  
   
 ## 6. 트러블 슈팅 및 주요 코드 포인트  
 1. **Outbox Pattern 적용 : DB 삽입과 Redis 삽입을 함께**  
