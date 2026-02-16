@@ -33,7 +33,8 @@ class SecurityConfig (
             auth.requestMatchers(
                 "/v1/auth/**",
                 "/swagger-ui/**",
-                "/v3/api-docs/**"
+                "/v3/api-docs/**",
+                "/actuator/health/**", "/actuator/prometheus/**"
             ).permitAll().anyRequest().authenticated() // requestMatchers 것들은 permit all,
             // 그 외의 (any Request) 요청들은 전부 authenticated
         }.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)

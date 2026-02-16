@@ -1,5 +1,6 @@
 package com.project.rainmind.user.controller
 
+import jakarta.servlet.http.HttpServletRequest
 import com.project.rainmind.user.dto.UserLogInRequest
 import com.project.rainmind.user.dto.UserLogInResponse
 import com.project.rainmind.user.service.UserLogInService
@@ -14,11 +15,15 @@ class UserLogInController (
 ){
     @PostMapping("/v1/auth/user/login")
     fun login(
-        @RequestBody userLogInRequest: UserLogInRequest
+        @RequestBody userLogInRequest: UserLogInRequest,
+        request: HttpServletRequest
     ): ResponseEntity<UserLogInResponse> {
+        val ip = request.remoteAddr
+
         val userLogInResponse = userLogInService.login(
             nickname = userLogInRequest.nickname,
-            password = userLogInRequest.password
+            password = userLogInRequest.password,
+            ip = ip
         )
 
         return ResponseEntity.ok(userLogInResponse)

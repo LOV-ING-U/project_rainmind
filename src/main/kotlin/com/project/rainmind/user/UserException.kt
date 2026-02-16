@@ -11,6 +11,13 @@ sealed class UserException (
     cause: Throwable? = null,
 ): GlobalException(http_errCode, http_errCode_cause, errMessage, cause)
 
+class TooManyLoginAttemptsException :
+        UserException(
+            http_errCode = HttpStatus.TOO_MANY_REQUESTS,
+            http_errCode_cause = 2,
+            errMessage = "Too many login attempts. Try again later."
+        )
+
 class UsernameAlreadyExistException :
         UserException(
             http_errCode = HttpStatus.CONFLICT,

@@ -3,5 +3,7 @@ CREATE TABLE IF NOT EXISTS users
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     password_hash VARCHAR(255) NOT NULL,
     nickname VARCHAR(255) NOT NULL,
-    location VARCHAR(255) NOT NULL
+    location VARCHAR(255) NOT NULL,
+    
+    CONSTRAINT unique_nickname UNIQUE (nickname)
 );

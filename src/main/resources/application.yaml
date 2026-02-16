@@ -6,6 +6,9 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME:rainmind}
     password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
 
   data:
     redis:
@@ -27,3 +30,12 @@ kma:
 logging:
   level:
     org.springframework.security: DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always

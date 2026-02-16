@@ -43,17 +43,26 @@ class ScheduleService (
 
         val location = locationRepository.findById(locationId).orElse(null) ?: throw InvalidRegionNameException()
 
-        if(scheduleRepository.findAll().size >= 30) throw TooManySchedulesException()
         if(startAt.isAfter(endAt)) throw InvalidScheduleStartAndEndTimeException()
 
-        val save = scheduleRepository.save(
-            Schedule(
-                userId = user.id!!,
-                title = title,
-                locationId = locationId,
-                startAt = startAt,
-                endAt = endAt
-            )
+        val saved = scheduleRepository.executeInsertWhenUnderLimit(
+            userId = user.id!!,
+            title = title,
+            locationId = locationId,
+            startAt = startAt,
+            endAt = endAt
+        )
+
+        if(saved == 0) throw TooManySchedulesException()
+
+        val ids = scheduleRepository.getLastInsertId()
+        val save = Schedule(
+            id = ids,
+            userId = user.id!!,
+            title = title,
+            locationId = locationId,
+            startAt = startAt,
+            endAt = endAt
         )
 
         // outbox DB에 등록

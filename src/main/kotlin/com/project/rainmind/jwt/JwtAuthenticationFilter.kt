@@ -74,5 +74,5 @@ class JwtAuthenticationFilter (
 
     private fun uri_check_noneed(
         uri: String
-    ): Boolean = uri.startsWith("/v1/auth/user/login") or uri.startsWith("/v1/auth/user/register") or uri.startsWith("/swagger-ui/") or uri.startsWith("/v3/api-docs")
+    ): Boolean = uri.startsWith("/v1/auth/user/login") or uri.startsWith("/v1/auth/user/register") or uri.startsWith("/swagger-ui/") or uri.startsWith("/v3/api-docs") or uri.startsWith("/actuator/health") or uri.startsWith("/actuator/prometheus")
 }
