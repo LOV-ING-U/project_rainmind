@@ -31,3 +31,10 @@ class InvalidScheduleStartAndEndTimeException :
             http_errCode_cause = 1,
             errMessage = "Time relation should be start < end. Try again."
         )
+
+class TemporarilyTooManyRequestException :
+        ScheduleException (
+            http_errCode = HttpStatus.BAD_REQUEST,
+            http_errCode_cause = 1,
+            errMessage = "Temporarily too many requests. Try again."
+        )
