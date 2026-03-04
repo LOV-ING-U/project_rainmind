@@ -71,6 +71,14 @@ class ScheduleService (
 
         // outbox DB에 등록
         val alarmAt = save.startAt.minusMinutes(30)
+      // ------- new --------
+      //  val payload = NotifyAlarmPayload(
+        //    scheduleId = save.id!!,
+          //  userId = user.id!!,
+    //        alarmAt = alarmAt
+      //  )
+
+        // old
         val payload = NotifyAlarmPayload(
             scheduleId = save.id!!,
             userId = user.id!!,
@@ -81,7 +89,7 @@ class ScheduleService (
             startAt = save.startAt,
             alarmAt = alarmAt
         )
-
+       
         val savedOutbox = alarmOutboxRepository.save(
             AlarmOutbox(
                 scheduleId = save.id!!,
@@ -111,7 +119,14 @@ class ScheduleService (
         for(outbox in outboxes) {
             outbox.status = AlarmOutboxStatus.DELETED
             alarmOutboxRepository.save(outbox)
-
+             // ---- new ----
+         /*   applicationEventPublisher.publishEvent(
+                DeleteAlarmEvent(
+                    userId = schedule.userId,
+                    scheduleId = schedule.id!!
+                )
+            )*/
+            // ---- old ----
             applicationEventPublisher.publishEvent(
                 DeleteAlarmEvent(
                     scheduleId = schedule.id!!,

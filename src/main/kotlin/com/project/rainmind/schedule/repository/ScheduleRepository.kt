@@ -31,7 +31,7 @@ interface ScheduleRepository : ListCrudRepository<Schedule, Long> {
     @Transactional
     @Query(value = """INSERT INTO schedules (user_id, title, location_id, start_at, end_at) 
         SELECT :userId, :title, :locationId, :start_at, :end_at
-        WHERE (SELECT COUNT(*) FROM schedules WHERE user_id = :userId) <= 29
+        WHERE (SELECT COUNT(*) FROM schedules WHERE user_id = :userId) <= 1000000
     """)
     fun executeInsertWhenUnderLimit(
         @Param("userId") userId: Long,

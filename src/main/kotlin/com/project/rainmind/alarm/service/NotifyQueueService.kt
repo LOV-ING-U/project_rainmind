@@ -31,17 +31,18 @@ class NotifyQueueService (
     private var scriptLua = """
             local key = KEYS[1]
             local now = tonumber(ARGV[1])
-            
+            local count = tonumber(ARGV[2])            
+
             local items = redis.call('ZRANGEBYSCORE', key, '-inf', now, 'LIMIT', 0, 1)
             if (#items == 0) then
                 return nil
             end
             
-            redis.call('ZREM', key, items[1])
+            redis.call('ZREM', key, unpack(items))
             return items[1]
         """.trimIndent()
-    private val deqSyncLua: DefaultRedisScript<String> = DefaultRedisScript<String>().apply {
-        resultType = String::class.java
+    private val deqSyncLua: DefaultRedisScript<List<*>> = DefaultRedisScript<List<*>>().apply {
+        resultType = List::class.java
         setScriptText(scriptLua)
     }
 
@@ -76,14 +77,19 @@ class NotifyQueueService (
     // redis 에서 알람 1개(payload)를 꺼내서 반환(String 타입)
     // 단, 현재 호출하는 시각 이전 알람이어야 함
     // 삭제는 원자적이지 못함. 따라서 Lua script 등을 사용해야함.
-    fun dequeue(): String? {
+    fun dequeue(
+        count: Int = 2000
+    ): List<String> {
         val nowTime = System.currentTimeMillis().toDouble().toString()
 
-        return stringRedisTemplate.execute(
+        val result = stringRedisTemplate.execute(
             deqSyncLua,
             listOf(ZSET_KEY),
-            nowTime
+            nowTime,
+            count.toString()
         )
+
+        return (result as? List<String>) ?: emptyList()
     }
 
     // commit 이후 redis 에 enqueue 실패시 남은 PENDING 들을 성공할때까지 재시도
@@ -107,4 +113,8 @@ class NotifyQueueService (
             } catch (e: Exception) { }
         }
     }
+
+    private fun userZSetKey(
+        userId: Long
+    ): String = "alarm:queue:u:{$userId}"
 }
