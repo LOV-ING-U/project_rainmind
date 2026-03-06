@@ -1,5 +1,6 @@
 package com.project.rainmind.alarm
 
+import java.time.Instant
 import java.time.LocalDateTime
 
 data class NotifyAlarmPayload (
@@ -19,6 +20,6 @@ data class NotifyAlarmPayload (
     val regionName: String,
     val nx: Int,
     val ny: Int,
-    val startAt: LocalDateTime,
-    val alarmAt: LocalDateTime
+    val startAt: Instant,
+    val alarmAt: Instant
 )

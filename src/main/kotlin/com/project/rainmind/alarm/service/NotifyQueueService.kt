@@ -33,20 +33,20 @@ class NotifyQueueService (
             local now = tonumber(ARGV[1])
             local count = tonumber(ARGV[2])            
 
-            local items = redis.call('ZRANGEBYSCORE', key, '-inf', now, 'LIMIT', 0, 1)
+            local items = redis.call('ZRANGEBYSCORE', key, '-inf', now, 'LIMIT', 0, count)
             if (#items == 0) then
                 return nil
             end
             
             redis.call('ZREM', key, unpack(items))
-            return items[1]
+            return items
         """.trimIndent()
     private val deqSyncLua: DefaultRedisScript<List<*>> = DefaultRedisScript<List<*>>().apply {
         resultType = List::class.java
         setScriptText(scriptLua)
     }
 
-    // @Async? redis 장애시, 여기에서 묶여있을 수 있는데..?
+    // @Async?
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun enqueueAfterCommit(
@@ -55,7 +55,7 @@ class NotifyQueueService (
         try {
             val payload = outbox.payload
             val notifyAlarmPayload = objectMapper.readValue(payload, NotifyAlarmPayload::class.java)
-            val score = notifyAlarmPayload.alarmAt.atZone(ZoneId.of("Asia/Seoul")).toInstant().toEpochMilli().toDouble()
+            val score = notifyAlarmPayload.alarmAt.toEpochMilli().toDouble()
 
             stringRedisTemplate.opsForZSet().add(ZSET_KEY, payload, score)
 
@@ -103,7 +103,7 @@ class NotifyQueueService (
             try {
                 val payload = signal.payload
                 val notifyAlarmPayload = objectMapper.readValue(payload, NotifyAlarmPayload::class.java)
-                val score = notifyAlarmPayload.alarmAt.atZone(ZoneId.of("Asia/Seoul")).toInstant().toEpochMilli().toDouble()
+                val score = notifyAlarmPayload.alarmAt.toEpochMilli().toDouble()
 
                 stringRedisTemplate.opsForZSet().add(ZSET_KEY, payload, score)
 
