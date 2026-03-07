@@ -57,7 +57,7 @@ class NotifyQueueService (
             val notifyAlarmPayload = objectMapper.readValue(payload, NotifyAlarmPayload::class.java)
             val score = notifyAlarmPayload.alarmAt.toEpochMilli().toDouble()
 
-            stringRedisTemplate.opsForZSet().add(ZSET_KEY, payload, score)
+            stringRedisTemplate.opsForZSet().add(userZSetKey(notifyAlarmPayload.userId), payload, score)
 
             // enqueue 성공
             // outbox.status = AlarmOutboxStatus.SENT
@@ -70,7 +70,7 @@ class NotifyQueueService (
         event: DeleteAlarmEvent
     ) {
         try {
-            stringRedisTemplate.opsForZSet().remove(ZSET_KEY, event.payload)
+            stringRedisTemplate.opsForZSet().remove(userZSetKey(event.userId), event.payload)
         } catch (e: Exception) { } // 실패
     }
 
@@ -105,7 +105,7 @@ class NotifyQueueService (
                 val notifyAlarmPayload = objectMapper.readValue(payload, NotifyAlarmPayload::class.java)
                 val score = notifyAlarmPayload.alarmAt.toEpochMilli().toDouble()
 
-                stringRedisTemplate.opsForZSet().add(ZSET_KEY, payload, score)
+                stringRedisTemplate.opsForZSet().add(userZSetKey(notifyAlarmPayload.userId), payload, score)
 
                 // enqueue 성공
                 // signal.status = AlarmOutboxStatus.SENT
@@ -117,4 +117,46 @@ class NotifyQueueService (
     private fun userZSetKey(
         userId: Long
     ): String = "alarm:queue:u:{$userId}"
+
+
+
+    // user별 key 추가를 위한 새로운 함수
+    // 1. redis 키를 순회하여, alarm:queue:u:*형태의 key들을 싹 다 모은다.
+    fun findAllUserQueueKeys(): Set<String> {
+        return stringRedisTemplate.keys("alarm:queue:u:*") ?: emptySet()
+    }
+
+    // 2. 특정 key에서, 1개씩 가져온다.
+    fun dequeueFromUserQueue(
+        queueKey: String,
+        count: Int = 1
+    ): List<String> {
+        val nowTime = System.currentTimeMillis().toString()
+ 
+        val result = stringRedisTemplate.execute(
+            deqSyncLua,
+            listOf(queueKey),
+            nowTime,
+            count.toString()
+        )
+
+        return (result as? List<String>) ?: emptyList()
+    }
+
+    // 3. 모든 user의 key에 대해 1개씩 가져온다.
+    fun dequeueFromAllUsers(
+        count: Int = 1
+    ): List<String> {
+        val queueKey = findAllUserQueueKeys()
+
+        if(queueKey.isEmpty()) return emptyList()
+
+        val ret = mutableListOf<String>()
+        for(queuekey in queueKey){
+            val dequeuedAlarm = dequeueFromUserQueue(queuekey, count)
+            if(!dequeuedAlarm.isEmpty()) ret.addAll(dequeuedAlarm)
+        }
+
+        return ret
+    }
 }

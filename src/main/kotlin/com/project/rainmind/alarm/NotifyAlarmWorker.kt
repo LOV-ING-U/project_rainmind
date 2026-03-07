@@ -28,7 +28,7 @@ class NotifyAlarmWorker (
     )
     fun sendAlarm() {
         val startTime = System.nanoTime()
-        val alarms = notifyQueueService.dequeue(2000) ?: return
+        val alarms = notifyQueueService.dequeueFromAllUsers(1) ?: return
         val duration = System.nanoTime() - startTime
 
        // val payload = objectMapper.readValue(alarm, NotifyAlarmPayload::class.java)
