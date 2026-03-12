@@ -1,5 +1,7 @@
 package com.project.rainmind.schedule.service
 
+import java.time.ZoneId
+import java.time.Instant
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.project.rainmind.alarm.AlarmOutboxStatus
 import com.project.rainmind.alarm.NotifyAlarmPayload
@@ -18,6 +20,7 @@ import com.project.rainmind.weather.repository.LocationRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import com.project.rainmind.alarm.entity.AlarmOutbox
 import com.project.rainmind.alarm.event.DeleteAlarmEvent
 import org.springframework.context.ApplicationEventPublisher
@@ -36,28 +39,51 @@ class ScheduleService (
         nickname: String,
         title: String,
         locationId: Long,
-        startAt: LocalDateTime,
-        endAt: LocalDateTime
+        startAt: OffsetDateTime,
+        endAt: OffsetDateTime
     ): ScheduleCreateResponse {
         val user = userLogInRepository.findByNickname(nickname) ?: throw NonExistingUsernameException()
 
         val location = locationRepository.findById(locationId).orElse(null) ?: throw InvalidRegionNameException()
 
-        if(scheduleRepository.findAll().size >= 30) throw TooManySchedulesException()
-        if(startAt.isAfter(endAt)) throw InvalidScheduleStartAndEndTimeException()
-
-        val save = scheduleRepository.save(
-            Schedule(
+        if((startAt.toInstant()).isAfter(endAt.toInstant())) throw InvalidScheduleStartAndEndTimeException()
+     
+        val startAt_toldt = startAt.toInstant().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()
+        val endAt_toldt = endAt.toInstant().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime()
+      //  try {
+            val saved = scheduleRepository.executeInsertWhenUnderLimit(
                 userId = user.id!!,
                 title = title,
                 locationId = locationId,
-                startAt = startAt,
-                endAt = endAt
+                startAt = startAt_toldt,
+                endAt = endAt_toldt
             )
+       // } catch (e: Exception) {
+         //   throw TemporarilyTooManyRequestException()
+      //  }
+
+        if(saved == 0) throw TooManySchedulesException()
+
+        val ids = scheduleRepository.getLastInsertId()
+        val save = Schedule(
+            id = ids,
+            userId = user.id!!,
+            title = title,
+            locationId = locationId,
+            startAt = startAt_toldt,
+            endAt = endAt_toldt
         )
 
         // outbox DB에 등록
-        val alarmAt = save.startAt.minusMinutes(30)
+        val alarmAt = startAt.toInstant().minusSeconds(30 * 60)
+      // ------- new --------
+      //  val payload = NotifyAlarmPayload(
+        //    scheduleId = save.id!!,
+          //  userId = user.id!!,
+    //        alarmAt = alarmAt
+      //  )
+
+        // old
         val payload = NotifyAlarmPayload(
             scheduleId = save.id!!,
             userId = user.id!!,
@@ -65,10 +91,10 @@ class ScheduleService (
             regionName = location.regionName,
             nx = location.nx,
             ny = location.ny,
-            startAt = save.startAt,
+            startAt = startAt.toInstant(),
             alarmAt = alarmAt
         )
-
+       
         val savedOutbox = alarmOutboxRepository.save(
             AlarmOutbox(
                 scheduleId = save.id!!,
@@ -98,7 +124,14 @@ class ScheduleService (
         for(outbox in outboxes) {
             outbox.status = AlarmOutboxStatus.DELETED
             alarmOutboxRepository.save(outbox)
-
+             // ---- new ----
+         /*   applicationEventPublisher.publishEvent(
+                DeleteAlarmEvent(
+                    userId = schedule.userId,
+                    scheduleId = schedule.id!!
+                )
+            )*/
+            // ---- old ----
             applicationEventPublisher.publishEvent(
                 DeleteAlarmEvent(
                     scheduleId = schedule.id!!,

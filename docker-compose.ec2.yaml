@@ -1,0 +1,99 @@
+services:
+  mysql:
+    image: mysql:8.0.28
+    container_name: rainmind_mysql
+    environment:
+      MYSQL_DATABASE: rainmind
+      MYSQL_USER: rainmind
+      MYSQL_PASSWORD: rainmind
+      MYSQL_ROOT_PASSWORD: rootpw
+    ports:
+      - "3306:3306"
+    command: ["--default-authentication-plugin=mysql_native_password"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    container_name: rainmind_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rainmind_app
+    env_file:
+      - rainmindenvs.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: rainmind_cadvisor
+    ports:
+      - "8081:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    privileged: true
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: rainmind_grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: rainmind_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yaml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      app:
+        condition: service_started
+      cadvisor:
+        condition: service_started
+      redis_exporter:
+        condition: service_started
+
+  redis_exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: rainmind_redis_exporter
+    environment:
+      REDIS_ADDR: redis://redis:6379
+    ports:
+      - "9121:9121"
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+  prometheus_data:
+  grafana_data:

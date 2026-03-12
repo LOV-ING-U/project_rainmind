@@ -7,21 +7,32 @@ import com.project.rainmind.jwt.JwtTokenProvider
 import com.project.rainmind.user.repository.UserLogInRepository
 import org.springframework.security.crypto.bcrypt.BCrypt
 import org.springframework.stereotype.Service
+import com.project.rainmind.user.service.LoginLimiter
 
 @Service
 class UserLogInService(
     private val userLogInRepository: UserLogInRepository,
-    private val jwtTokenProvider: JwtTokenProvider
+    private val jwtTokenProvider: JwtTokenProvider,
+    private val loginLimiter: LoginLimiter
 ){
     fun login(
         nickname: String,
-        password: String
+        password: String,
+        ip: String
     ): UserLogInResponse {
-        if(!userLogInRepository.existsByNickname(nickname)) throw NonExistingUsernameException()
-        val user = userLogInRepository.findByNickname(nickname)!!
+        loginLimiter.throwIfBlocked(ip)
 
-        if(!BCrypt.checkpw(password, user.passwordHash)) throw PasswordNotCorrectException()
+        val user = userLogInRepository.findByNickname(nickname)
+        if(user == null) {
+            loginLimiter.onFail(ip)
+            throw NonExistingUsernameException()
+        }
 
+        if(!BCrypt.checkpw(password, user.passwordHash)) { 
+            loginLimiter.onFail(ip)
+            throw PasswordNotCorrectException()
+        }
+        
         val token = jwtTokenProvider.createToken(user.nickname)
 
         return UserLogInResponse(

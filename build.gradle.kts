@@ -20,6 +20,9 @@ repositories {
 }
 
 dependencies {
+        // jpa
+       // implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-security")
@@ -48,7 +51,7 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 
 	// swagger io
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.7.0")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.3")
 
 	// jwt
 	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
@@ -58,6 +61,10 @@ dependencies {
 	// test
 	testImplementation("org.testcontainers:testcontainers")
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+
+        // testing
+        implementation("org.springframework.boot:spring-boot-starter-actuator")
+        implementation("io.micrometer:micrometer-registry-prometheus")
 }
 
 kotlin {

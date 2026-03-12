@@ -6,3 +6,6 @@ CREATE TABLE IF NOT EXISTS alarm_outbox
     status VARCHAR(16) NOT NULL,
     created_at DATETIME NOT NULL
 );
+
+-- outbox 검색을 위한 index
+CREATE INDEX __alarm_outbox_index ON alarm_outbox (status);
