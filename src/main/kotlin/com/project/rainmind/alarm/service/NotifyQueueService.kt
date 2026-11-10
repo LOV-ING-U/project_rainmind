@@ -60,8 +60,8 @@ class NotifyQueueService (
             stringRedisTemplate.opsForZSet().add(ZSET_KEY, payload, score)
 
             // enqueue 성공
-            // outbox.status = AlarmOutboxStatus.SENT
-            alarmOutboxRepository.delete(outbox)
+            outbox.status = AlarmOutboxStatus.SENT
+            alarmOutboxRepository.save(outbox)
         } catch (e: Exception) { } // 실패
     }
 
@@ -108,8 +108,8 @@ class NotifyQueueService (
                 stringRedisTemplate.opsForZSet().add(ZSET_KEY, payload, score)
 
                 // enqueue 성공
-                // signal.status = AlarmOutboxStatus.SENT
-                alarmOutboxRepository.delete(signal)
+                signal.status = AlarmOutboxStatus.SENT
+                alarmOutboxRepository.save(signal)
             } catch (e: Exception) { }
         }
     }
