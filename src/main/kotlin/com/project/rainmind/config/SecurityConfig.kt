@@ -31,9 +31,7 @@ class SecurityConfig (
             it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         }.authorizeHttpRequests { auth ->
             auth.requestMatchers(
-                "/v1/auth/**",
-                "/swagger-ui/**",
-                "/v3/api-docs/**",
+                "/auth/**",
                 "/actuator/health/**", "/actuator/prometheus/**"
             ).permitAll().anyRequest().authenticated() // requestMatchers 것들은 permit all,
             // 그 외의 (any Request) 요청들은 전부 authenticated

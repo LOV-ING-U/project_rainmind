@@ -25,7 +25,11 @@ security:
     access-token-exp-ms: ${JWT_ACCESS_TOKEN_EXP_MS:6000000}
 
 kma:
-  auth-key: ${KMA_AUTH_KEY}
+  auth-key: ${KMA_AUTH_KEY:}
+
+app:
+  scheduling:
+    enabled: ${APP_SCHEDULING_ENABLED:true}
 
 logging:
   level:

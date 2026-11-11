@@ -11,7 +11,5 @@ class User (
     @Column("password_hash")
     var passwordHash: String,
     @Column("nickname")
-    var nickname: String,
-    @Column("location")
-    var location: String,
+    var nickname: String
 )

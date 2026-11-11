@@ -1,84 +1,55 @@
 package com.project.rainmind.alarm.service
 
+import com.project.rainmind.common.SEOUL
 import org.springframework.data.redis.core.StringRedisTemplate
-import org.springframework.stereotype.Service
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.project.rainmind.alarm.AlarmOutboxStatus
-import com.project.rainmind.alarm.NotifyAlarmPayload
-import com.project.rainmind.alarm.repository.AlarmOutboxRepository
 import org.springframework.data.redis.core.script.DefaultRedisScript
-import java.time.ZoneId
+import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
+// 테스트에서도 참조하는 큐 키
+const val ALARM_QUEUE_KEY = "alarm:queue"
+
+// 알림 시각이 지난 원소를 꺼내면서 동시에 제거한다(원자적 claim).
+// 워커가 여러 대여도 같은 id 를 두 번 꺼내지 않는다.
+private const val POP_LUA = """
+    local items = redis.call('ZRANGEBYSCORE', KEYS[1], '-inf', ARGV[1], 'LIMIT', 0, tonumber(ARGV[2]))
+    if #items > 0 then
+        redis.call('ZREM', KEYS[1], unpack(items))
+    end
+    return items
+"""
+
+// Redis ZSET 알림 큐
+// member = scheduleId, score = 알림 시각(epoch ms)
+// 원본은 DB 이고, 이 큐는 언제든 DB 에서 다시 만들 수 있는 시간순 인덱스다.
 @Service
 class NotifyQueueService (
-    private val stringRedisTemplate: StringRedisTemplate,
-    private val objectMapper: ObjectMapper,
-    private val alarmOutboxRepository: AlarmOutboxRepository
+    private val stringRedisTemplate: StringRedisTemplate
 ) {
-    // redis zset 사용
-    // key: 알림 모음(= alarm:at 고정)
-    // value: 알림들 집합(각 알람들은 이름/score 로 구성됨)
-    // score 정렬된 상태로 유지(sorted set)
-    // deque 원자성 위한 lua script 도입
-    private val ZSET_KEY = "alarm:queue"
-    private var scriptLua = """
-            local key = KEYS[1]
-            local now = tonumber(ARGV[1])
-            local count = tonumber(ARGV[2])            
-
-            local items = redis.call('ZRANGEBYSCORE', key, '-inf', now, 'LIMIT', 0, count)
-            if (#items == 0) then
-                return nil
-            end
-            
-            redis.call('ZREM', key, unpack(items))
-            return items
-        """.trimIndent()
-    private val deqSyncLua: DefaultRedisScript<List<*>> = DefaultRedisScript<List<*>>().apply {
+    private val popScript: DefaultRedisScript<List<*>> = DefaultRedisScript<List<*>>().apply {
         resultType = List::class.java
-        setScriptText(scriptLua)
+        setScriptText(POP_LUA.trimIndent())
     }
 
-    // redis 에서 알람 1개(payload)를 꺼내서 반환(String 타입)
-    // 단, 현재 호출하는 시각 이전 알람이어야 함
-    // 삭제는 원자적이지 못함. 따라서 Lua script 등을 사용해야함.
-    fun dequeue(
-        count: Int = 2000
-    ): List<String> {
-        val nowTime = System.currentTimeMillis().toDouble().toString()
+    // 같은 id 를 여러 번 넣어도 score 만 갱신된다(멱등)
+    fun enqueue(
+        scheduleId: Long,
+        alarmAt: LocalDateTime
+    ) {
+        val score = alarmAt.atZone(SEOUL).toInstant().toEpochMilli().toDouble()
+        stringRedisTemplate.opsForZSet().add(ALARM_QUEUE_KEY, scheduleId.toString(), score)
+    }
 
+    // 현재 시각까지 도래한 알림 id 를 최대 count 개 꺼낸다
+    fun popDue(
+        count: Int
+    ): List<Long> {
         val result = stringRedisTemplate.execute(
-            deqSyncLua,
-            listOf(ZSET_KEY),
-            nowTime,
+            popScript,
+            listOf(ALARM_QUEUE_KEY),
+            System.currentTimeMillis().toString(),
             count.toString()
         )
-
-        return (result as? List<String>) ?: emptyList()
+        return result?.mapNotNull { it?.toString()?.toLongOrNull() } ?: emptyList()
     }
-
-    // PENDING 상태의 outbox 를 redis 에 등록 (알림 등록의 유일한 경로)
-    // 성공 시 SENT 로 변경, 실패 시 PENDING 유지 후 다음 주기에 재시도
-    fun retryPending() {
-        val pendings = alarmOutboxRepository.findByStatus(AlarmOutboxStatus.PENDING)
-
-        // for each pending signals,
-        for(signal in pendings) {
-            try {
-                val payload = signal.payload
-                val notifyAlarmPayload = objectMapper.readValue(payload, NotifyAlarmPayload::class.java)
-                val score = notifyAlarmPayload.alarmAt.toEpochMilli().toDouble()
-
-                stringRedisTemplate.opsForZSet().add(ZSET_KEY, payload, score)
-
-                // enqueue 성공
-                signal.status = AlarmOutboxStatus.SENT
-                alarmOutboxRepository.save(signal)
-            } catch (e: Exception) { }
-        }
-    }
-
-    private fun userZSetKey(
-        userId: Long
-    ): String = "alarm:queue:u:{$userId}"
 }

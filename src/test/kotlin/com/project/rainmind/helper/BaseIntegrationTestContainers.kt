@@ -50,6 +50,10 @@ abstract class BaseIntegrationTestContainers {
             registry.add("spring.profiles.active") {
                 "test"
             }
+            // 워커는 테스트에서 직접 호출한다(백그라운드 스케줄 실행 방지)
+            registry.add("app.scheduling.enabled") {
+                "false"
+            }
         }
     }
 }
