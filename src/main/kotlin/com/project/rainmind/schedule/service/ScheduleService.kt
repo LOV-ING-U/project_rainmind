@@ -22,8 +22,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import com.project.rainmind.alarm.entity.AlarmOutbox
-import com.project.rainmind.alarm.event.DeleteAlarmEvent
-import org.springframework.context.ApplicationEventPublisher
 
 @Service
 class ScheduleService (
@@ -31,8 +29,7 @@ class ScheduleService (
     private val locationRepository: LocationRepository,
     private val userLogInRepository: UserLogInRepository,
     private val alarmOutboxRepository: AlarmOutboxRepository,
-    private val objectMapper: ObjectMapper,
-    private val applicationEventPublisher: ApplicationEventPublisher
+    private val objectMapper: ObjectMapper
 ) {
     @Transactional
     fun createSchedule(
@@ -103,7 +100,6 @@ class ScheduleService (
             )
         )
 
-        applicationEventPublisher.publishEvent(savedOutbox)
         return ScheduleCreateResponse(
             scheduleId = save.id!!
         )
@@ -121,23 +117,10 @@ class ScheduleService (
 
         // delete at outbox(deleted)
         val outboxes = alarmOutboxRepository.findAllByScheduleId(schedule.id!!)
+        // 아직 redis 에 등록되지 않은(PENDING) outbox 는 DELETED 로 바꿔 이후 등록되지 않도록 함
         for(outbox in outboxes) {
             outbox.status = AlarmOutboxStatus.DELETED
             alarmOutboxRepository.save(outbox)
-             // ---- new ----
-         /*   applicationEventPublisher.publishEvent(
-                DeleteAlarmEvent(
-                    userId = schedule.userId,
-                    scheduleId = schedule.id!!
-                )
-            )*/
-            // ---- old ----
-            applicationEventPublisher.publishEvent(
-                DeleteAlarmEvent(
-                    scheduleId = schedule.id!!,
-                    payload = outbox.payload
-                )
-            )
         }
 
         return ScheduleDeleteResponse(

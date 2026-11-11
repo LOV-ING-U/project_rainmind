@@ -5,15 +5,8 @@ import org.springframework.stereotype.Service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.project.rainmind.alarm.AlarmOutboxStatus
 import com.project.rainmind.alarm.NotifyAlarmPayload
-import com.project.rainmind.alarm.entity.AlarmOutbox
-import com.project.rainmind.alarm.event.DeleteAlarmEvent
 import com.project.rainmind.alarm.repository.AlarmOutboxRepository
 import org.springframework.data.redis.core.script.DefaultRedisScript
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.transaction.annotation.Propagation
-import org.springframework.transaction.annotation.Transactional
-import org.springframework.transaction.event.TransactionPhase
-import org.springframework.transaction.event.TransactionalEventListener
 import java.time.ZoneId
 
 @Service
@@ -46,34 +39,6 @@ class NotifyQueueService (
         setScriptText(scriptLua)
     }
 
-    // @Async?
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    fun enqueueAfterCommit(
-        outbox: AlarmOutbox
-    ) {
-        try {
-            val payload = outbox.payload
-            val notifyAlarmPayload = objectMapper.readValue(payload, NotifyAlarmPayload::class.java)
-            val score = notifyAlarmPayload.alarmAt.toEpochMilli().toDouble()
-
-            stringRedisTemplate.opsForZSet().add(ZSET_KEY, payload, score)
-
-            // enqueue 성공
-            outbox.status = AlarmOutboxStatus.SENT
-            alarmOutboxRepository.save(outbox)
-        } catch (e: Exception) { } // 실패
-    }
-
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    fun removeAfterCommit(
-        event: DeleteAlarmEvent
-    ) {
-        try {
-            stringRedisTemplate.opsForZSet().remove(ZSET_KEY, event.payload)
-        } catch (e: Exception) { } // 실패
-    }
-
     // redis 에서 알람 1개(payload)를 꺼내서 반환(String 타입)
     // 단, 현재 호출하는 시각 이전 알람이어야 함
     // 삭제는 원자적이지 못함. 따라서 Lua script 등을 사용해야함.
@@ -92,9 +57,8 @@ class NotifyQueueService (
         return (result as? List<String>) ?: emptyList()
     }
 
-    // commit 이후 redis 에 enqueue 실패시 남은 PENDING 들을 성공할때까지 재시도
-    // @Scheduled(fixedDelay = 10000)
-    // 그냥 떼고 scheduler 로 옮긴다. 서비스 레이어 책임이 흐려지는 느낌...
+    // PENDING 상태의 outbox 를 redis 에 등록 (알림 등록의 유일한 경로)
+    // 성공 시 SENT 로 변경, 실패 시 PENDING 유지 후 다음 주기에 재시도
     fun retryPending() {
         val pendings = alarmOutboxRepository.findByStatus(AlarmOutboxStatus.PENDING)
 
