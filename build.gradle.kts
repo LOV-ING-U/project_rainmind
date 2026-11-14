@@ -50,9 +50,6 @@ dependencies {
 	testImplementation("org.testcontainers:mysql")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 
-	// swagger io
-	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.3")
-
 	// jwt
 	implementation("io.jsonwebtoken:jjwt-api:0.12.6")
 	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.6")

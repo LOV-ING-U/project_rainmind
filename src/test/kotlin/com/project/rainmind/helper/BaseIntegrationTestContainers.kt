@@ -50,6 +50,14 @@ abstract class BaseIntegrationTestContainers {
             registry.add("spring.profiles.active") {
                 "test"
             }
+            // 테스트용 JWT 서명 키(HS256 은 32바이트 이상 필요). 운영 값은 환경변수 JWT_SECRET 으로 주입한다
+            registry.add("security.jwt.secret") {
+                "rainmind-test-jwt-secret-key-at-least-32-bytes"
+            }
+            // 워커는 테스트에서 직접 호출한다(백그라운드 스케줄 실행 방지)
+            registry.add("app.scheduling.enabled") {
+                "false"
+            }
         }
     }
 }

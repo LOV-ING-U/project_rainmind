@@ -1,57 +1,9 @@
-# Project : RainMind - 사용자 일정 기반 날씨 알림 서비스 
-* 2026/02/16 추가 : 최신 코드들은 성능 최적화 및 정합성 보강을 위해 fetch/optimization 브랜치에서 작업 중입니다. 현재 브랜치(master)의 코드들은 구버전의 코드입니다.  
-  
-## 목차  
-- 프로젝트 개요  
-- 전체 아키텍처  
-- 주요 기능      
-- 기술 스택  
-- API 명세서 및 ER Diagram  
-- 트러블 슈팅 및 주요 코드 포인트  
-- k6 성능 테스트를 이용한 최적화  
-- 현재 업데이트 중인 항목  
-- 실행 방법  
-  
-## 1. 프로젝트 개요  
-RainMind는 일정(Schedule) 생성 시 알림을 예약하고, 지정된 시점의 날씨 정보를 안정적으로 사용자에게 전송하는 서버 애플리케이션입니다.  
-  
-현재 구버전 코드에서 성능 최적화, 정합성 보강을 진행하고 있으며, docker compose 기반 EC2 실행 환경을 구축하였으며 k6 성능 테스트 및 grafana로의 시각화를 통해 꾸준히 코드를 업데이트하고 있습니다.  
-  
-본 프로젝트는 이후 FastAPI 기반, 동일한 알림 처리 서비스를 제공하는 프로젝트의 원본에 해당합니다. FastAPI 버전 Repository: https://github.com/LOV-ING-U/rainmind_fastapi  
-  
-### 🗓️ 기간  
-2025.12 ~ 현재 진행형  
-  
-### 👩🏻‍💻 개발자
-<br />  
-  
-| [김기환(BE)](https://github.com/LOV-ING-U) |  
-| :---------------------------------------: |  
-| <a href="https://github.com/LOV-ING-U"><img src="https://avatars.githubusercontent.com/LOV-ING-U" width="150px"></a> |  
+# Project : RainMind - 일정 30분 전 날씨 알림 서비스
 
-<br />  
-  
-## 2. 전체 아키텍처  
-![arcihitecture](./img/rainmind.png)  
-  
-- Client 요청  
-- Spring API Server 요청 수신  
-- RDB (Schedule, Alarm Outbox) 삽입/삭제 및 Event 발생  
-- Transactional Event Listener의 Event handle 및 Redis ZSet 조작  
-- Alarm Worker의 alarm 출력, Client 응답 전송  
-  
-## 3. 주요 기능    
-1. Client가 일정 생성/삭제 API를 호출합니다.  
-2. Schedule과 Alarm Outbox를 하나의 DB 트랜잭션으로 저장합니다.  
-3. 트랜잭션 commit 이후, alarm event를 Redis ZSet에 enqueue합니다.  
-4. Worker가 Lua Script를 이용한 atomic dequeue를 수행하여 알람을 출력합니다.  
-  
-- 보조 로직 흐름  
-1. 사용자는 회원가입/로그인 기능을 우선적으로 이용하여 권한을 획득합니다.  
-2. 사용자는 일정을 생성할 경우, 일정 시작 시각 이전에 알람을 출력받을 수 있습니다.  
-3. 또는 미리 등록한 같은 날짜의 다른 일정이 시작하는 시각의 날씨 정보를 미리 받을 수 있습니다.  
-  
-## 4. 사용한 기술 스택  
+일정을 등록하면 시작 30분 전에 일정·장소·날씨를 담은 알림을 보내는 서버입니다.
+DB 와 Redis 사이의 정합성(유실·유령·중복 알림)을 어떻게 보장하는지에 초점을 둔 프로젝트입니다.
+
+## 1. 기술 스택
 <p>
     <img alt="spring boot"  src="https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=SpringBoot&logoColor=white">
     <img alt="docker"  src="https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white">
@@ -60,47 +12,93 @@ RainMind는 일정(Schedule) 생성 시 알림을 예약하고, 지정된 시점
     <img alt="mysql"  src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=MySQL&logoColor=white">
     <img alt="k6"  src="https://img.shields.io/badge/k6-7D64FF?style=for-the-badge&logo=k6&logoColor=white">
     <img alt="Grafana"  src="https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=Grafana&logoColor=white">
-</p>  
+</p>
+
+## 2. API
+
+| 메서드 | 경로 | 인증 | 설명 |
+| --- | --- | --- | --- |
+| POST | `/auth/user/register` | X | 회원가입 (`nickname`, `password`) |
+| POST | `/auth/user/login` | X | 로그인, JWT 발급 (IP 기반 실패 횟수 제한) |
+| POST | `/user/logout` | O | 토큰 블랙리스트 등록 |
+| POST | `/schedules` | O | 일정 생성 (`title`, `regionCode`, `startAt`) |
+| DELETE | `/schedules/{id}` | O | 일정 삭제 |
+
+- 일정 생성 조건: 시작 시각은 미래, 지역 코드는 지역 목록에 존재, 사용자당 최대 40개
+
+## 3. 설계
+
+### 전제
+- **원본은 DB 입니다.** Redis 의 알림 큐와 날씨 사본은 DB 에서 다시 만들 수 있습니다(Redis 유실 복구 로직은 추후 구현).
+- **`schedules` 는 쓰기가 많은 테이블로 가정합니다.** 가장 간단한 방법으로 DB 폴링이 있습니다만, 2초마다 '알림 시각이 지났으며 아직 보내지 않은 일정'을 찾기 위해서는 (send_time, status) 인덱스가 있어야 하며 쓰기가 많은 테이블로 가정했기 때문에 이 쓰기 비용을 줄이기 위해 Redis ZSET을 이용하여 시간순 정렬을 사용합니다. DB에는 꼭 필요한 PK / FK만 둡니다.
+- **Redis 큐에서 꺼낸(pop) 알림은 반드시 발송된다고 가정합니다.**
   
-## 5. API 명세서 및 ER Diagram  
-**[🔗 API 명세서](https://www.notion.so/Project-RainMind-API-30973648e856802692b6f61b81ce9aef?source=copy_link)**  
-- ER Diagram  
-![erd](ERD.JPG)  
-  
-## 6. 트러블 슈팅 및 주요 코드 포인트  
-1. **Outbox Pattern 적용 : DB 삽입과 Redis 삽입을 함께**  
-DB 삽입과 Redis 삽입 연산을 원자적으로 수행하는 기능은 Spring 프레임워크에서는 제공하지 않는 기능입니다.  
-따라서, Redis 삽입 로직을 기존 비즈니스 로직에서 분리한 후, Alarm outbox를 Schedule table과 하나의 트랜잭션으로 묶은 후, commit 이후에 event를 발행하여 Redis 연산을 처리하도록 하였습니다.  
-  
-또한 Redis 연산이 실패할 것을 대비하여, 일정 시간마다 PENDING Signal만을 확인하여 Redis에 enqueue 해주는 retryPending() 재시도 함수를 도입했습니다.  
-  
-2. **Lua Script 도입 : 분산 환경에서 Redis 연산 묶음을 안전하게**  
-Redis dequeue를 위한 ZRANGEBYSCORE + ZREM 연산을 Lua Script로 묶어, 다중 worker 상황에서 중복 dequeue를 방지합니다.  
-또한, Schedule이 이미 삭제된 경우에 알람을 보내서는 안됩니다. 따라서, 알람 전송 직전 DB를 참조하여 삭제된 일정인지 확인 후 알람을 전송합니다.  
-  
-(코드 흐름)  
-```java
-ScheduleService.kt 에서 일정/Outbox 트랜잭션 수행 -> Event 발생, NotifyQueueService.kt 의 Event Listener 를 통해 Redis 연산 수행 -> NotifyAlarmWorker.kt 에 의해 Alarm 출력
-```  
-  
-3. **ShedLock 도입 : 반복 작업 스케줄러의 단일 실행 보장으로 성능 향상**  
-멀티 프로세스 환경에서, 모든 프로세스가 반복 작업 스케줄러를 수행하는 것보다 하나의 프로세스만 반복 작업을 수행하는 것이 서버의 성능 향상에 도움이 됩니다. 따라서, ShedLock을 도입하여 오직 하나의 프로세스만 반복 작업을 수행하게 하여 성능을 향상시킵니다.  
-  
-4. **Exception 정책 : 구조화된 에러 유형 정의**  
-Service Layer의 모든 함수마다 try-catch 문을 사용하여 에러를 출력한다면, 서비스 레이어 함수 하나를 추가할 때마다 코드 길이가 계속 길어지며 같은 패턴이 반복됩니다.  
-  
-따라서, 루트에 커스텀 RuntimeException인 GlobalException 하나를 만든 후, 본 프로젝트에서 발생하는 모든 서비스 레이어 로직의 exception은 해당 exception을 상속하여 만들도록 하였습니다. 또한 각 exception마다 http Status 및 http Error Code Pattern을 별도로 두어, 에러 발생시 추적이 쉽도록 하였습니다.  
-  
-(코드 흐름)  
-```java
-class GlobalException -> class ScheduleException, class UserException, ...(inherited)
-exception 발생 시 class GlobalExceptionHandler 로 이동하여 HTTP 응답 메시지 생성  
-```  
-  
-+ 그외 기술적 의사결정들(세션 기반/JWT 기반 선택, RestClient 별도 분리, 해당 기술 스택들 선택 이유 등)에 대해서는 아래 기술 블로그를 참조해 주세요.  
-기술 블로그: https://lov-ing-u.github.io/categories/rainmind  
-  
-## 7. k6 성능 테스트를 이용한 최적화(1차)  
+### 데이터
+| 위치 | 구성 |
+| --- | --- |
+| `users` | id, nickname, password_hash |
+| `schedules` | id, user_id(FK), title, start_at, region_name, nx, ny, notified_at |
+| `alarm_outbox` | id, schedule_id, alarm_at — Redis 에 아직 등록되지 않은 알림만 |
+| `weather_forecast` | PK(nx, ny, fcst_at), sky, pty, pop, tmp, base_at, fetched_at |
+| Redis `alarm:queue` | ZSET, member = schedule_id, score = 알림 시각 |
+| Redis `weather:{nx}:{ny}:{yyyyMMddHH}` | 날씨 사본(`sky,pty,pop,tmp`), TTL = 예보 시각 + 1시간 |
+| 메모리 | 지역 목록(`regions.csv`) |
+
+### 흐름
+```
+[일정 생성]  TX { users FOR UPDATE → COUNT(한도 40) → INSERT schedules, INSERT alarm_outbox }
+[등록 워커]  10초마다 outbox → ZADD(schedule_id) → 성공한 outbox 삭제
+[발송 워커]  2초마다 Lua pop(ZRANGEBYSCORE + ZREM)
+             → SELECT schedules WHERE id IN (…) AND notified_at IS NULL AND start_at > now  (PK 조회)
+             → Redis 에서 날씨 조회 → 발송 → UPDATE notified_at
+[일정 삭제]  TX { DELETE schedules, DELETE alarm_outbox }  (Redis 는 건드리지 않음)
+[날씨 수집]  12시간마다 격자별 단기예보 조회 → DB(weather_forecast) upsert + Redis 저장
+```
+
+알림 메시지 예시
+```
+[RainMind] 30분 뒤 일정이 있어요
+· 일정: 팀 회의
+· 시간: 2026-11-12 15:00
+· 장소: 서울특별시 관악구 신림동
+· 날씨: 맑음, 강수확률 20%, 기온 3.5℃
+```
+
+### 설계 방식의 보장
+| 항목 | 보장 | 근거 |
+| --- | --- | --- |
+| 등록 유실 | 없음 | 일정과 outbox 를 한 트랜잭션에 저장하고, 등록 워커에서 ZADD 성공 후에만 outbox 를 지움 |
+| 유령 알림(삭제된 일정) | 없음 | 큐에는 id 만 두고, 발송 직전 PK 로 존재를 확인함 |
+| 중복 발송 | Redis Deq 이후, `notified_at`을 기록하기 직전 서버가 Down 되었으며, 재시도 워커가 남은 outbox를 보고 재삽입한 경우에 가능 | - |
+| 늦은 발송 | 시작이 지난 일정은 보내지 않음 | 발송 조회에 `start_at > now` 조건 |
+| 같은 사용자 동시 생성 | 동시성 이슈 및 데드락 없음 | USER 행을 X-Lock을 잡아(비관적 락) & 일정을 삽입함 |
+| 날씨 장애 | 알림은 정시 발송 | Redis에 날씨 정보가 없다면 생략함 |
+
+### 회고
+- 처음에는 시간순 정렬이 필요하다는 이유로 Redis ZSET 을 바로 도입했으나, 이 정도 규모에서는 DB 폴링으로도 충분했습니다. Redis를 넣으며 오히려 설계 복잡도가 증가했습니다.  
+- 따라서 Redis ZSET 선택이 유효해지는 조건은 "쓰기 집중 테이블에서 2초 주기의 (시간, status) 인덱스 검색 비용을 줄이고 싶을때"입니다.  
+
+## 4. 확장 설계 (아직 미구현된 부분)
+- **발송 신뢰성**: Lua pop 과 Redis Streams `XADD` 를 한 스크립트로 묶고, consumer group + `XACK` + DLQ 로 발송. 외부 푸시에는 scheduleId 멱등 키
+- **Redis 유실 복구**: 표시 키가 사라지면 미발송 일정을 DB 에서 다시 ZADD
+
+## 5. 지역 데이터
+`src/main/resources/regions.csv` (`code,name,nx,ny`) 를 앱 시작 시 메모리에 올립니다.
+공공데이터포털 기상청 단기예보 조회서비스의 격자 위경도 자료(2026-09-30 기준)에서 행정구역코드, 시/군/구, 격자 X/Y 만 추려 만들었습니다.
+총 3,839개 지역, 중복을 제거한 격자는 1,632개입니다. 날씨 수집은 격자 단위로 하루 2회 호출하므로 하루 약 3,300건입니다(API 일일 1만회 이하 제약으로 인해 보수적으로 설정).
+
+## 6. 실행 방법
+```cli
+podman machine start
+./gradlew test
+```
+
+- 날씨 수집은 기상청 인증키(`KMA_AUTH_KEY`)가 있어야 동작합니다. 없으면 수집이 실패하고, 알림은 날씨 없이 발송됩니다.
+
+## 7. 기술 블로그
+설계 과정과 트러블슈팅: https://lov-ing-u.github.io/categories/rainmind
+
+## 8. k6 성능 테스트 (리팩터링 이전 버전에서 측정)  
 1. **회원가입 기능 응답시간 최적화**  
 - BCrypt 연산으로 인한 CPU 병목 파악, p(95) 최대 10배 개선  
 - 대안으로 BCrypt gensalt() 인자값 설정, Argon2와 같은 대체 암호화 알고리즘 제안  
@@ -127,28 +125,9 @@ exception 발생 시 class GlobalExceptionHandler 로 이동하여 HTTP 응답 �
 | 개선 후 | 17.2ms | 9.25ms | 72.25ms | 1.82s | 398.995026 | 147.97 | 7.41 | 3.68 | 0.62 | 596 | 0.55 |  
   
 4. **Redis 알람 큐의 구조 개선으로 많은 양의 트래픽에서 발생 가능한 초기 spike 제거 및 스케줄러 작업시간 최적화**  
-- Redis 알람 큐의 key 저장 구조를 개별 키 -> 통합 키로 개선하여, 서비스 오픈 시 발생 가능한 대량의 초기 enqueue 트래픽 발생으로 인한 초기 응답시간 spike 제거 및 enqueue 시의 스케줄러 작업시간 / enq & deq 시의 스케줄러 작업 시간 각각 약 100배, 4배 개선  
+- Redis 알람 큐의 key 저장 구조를 개별 키 -> 통합 키로 개선하여, deq 시의 스케줄러 작업 시간 4배 개선 및 단편화율 1.2 수준 유지  
   
-| 개선 전/후 | Redis 메모리 단편화율(minimum) | avg time(only enq) | avg time(enq & deq) |  
+| 개선 전/후 | Redis 메모리 단편화율 | avg time(deq) |  
 | --------- | ---------------------------- | ----------------- | -------------------- |  
-| 개선 전(user 개별 키) | 1.15 | 1.19s | 763.95ms |  
-| 개선 후(전역 통합 키) | 1.21 | 13.44ms | 169.63ms |  
-  
-## 8. 현재 업데이트 중인 항목  
-- **retryPending() 로직 강화 : findAllBy에서 Pageable로**  
-짧은 시간마다 DB 전체를 읽는 쿼리는 서버에 심한 부하를 줄 수 있으므로, Pageable 또는 Native Query를 이용하여 정해진 개수만큼 PENDING Signal을 가져오는 것이 응답시간을 줄일 수 있을 것입니다.  
-  
-- **Message 발행을 안전하게 : Redis Stream vs RabbitMQ**  
-현재의 Redis ZSet 구조는 서버의 알람 발행 이후, 사용자의 도착을 보장할 방법이 없습니다. 따라서, 자체 ACK 기능을 보유한 RabbitMQ 혹은 기존 Redis를 활용한 Redis Stream을 고려 중입니다(kafka는 현재 시점에서 운영 복잡도 측면에서 앞선 선택지들보다는 우선 순위가 낮습니다).  
-  
-- **Schedule 생성 로직 강화 : Deadlock 방지 재시도 매커니즘**  
-Schedule 삽입의 쿼리가 생성 가능한 Deadlock 가능성에 대한 재시도 로직 도입을 고려 중입니다. 사용자 정의 에러 반환, 혹은 service fun 내부의 반복 재시도를 도입할 예정입니다.  
-  
-## 9. 실행 방법  
-프로젝트의 핵심 기능을 테스트할 수 있는 테스트 코드가 존재합니다. 테스트 항목은 로그인/로그아웃/회원가입, Redis 알람 등록/삭제 확인 과정입니다. 아래 과정을 통해 테스트할 수 있습니다.  
-  
-1) docker 실행
-2) docker 띄우기 : **docker compose up -d**  
-3) 테스트 코드 실행 : **./gradlew test**  
-  
-실제 기상청 API를 호출하는 로직 또한 테스트 코드 내부에 존재하나, 기상청 API 인증키를 필요로 하는 관계로 주석으로만 명시하였습니다.
+| 개선 전(user 개별 키) | 1.15 | 763.95ms |  
+| 개선 후(전역 통합 키) | 1.21 | 169.63ms |

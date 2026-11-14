@@ -18,7 +18,7 @@ export default function() {
     }
 
     const response = http.post(
-        `${BASE_URL}/v1/auth/user/login`,
+        `${BASE_URL}/auth/user/login`,
         JSON.stringify(payload),
         {
             headers: {

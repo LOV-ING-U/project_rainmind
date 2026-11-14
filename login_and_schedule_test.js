@@ -14,7 +14,7 @@ const PASSWORD = __ENV.PASSWORD;
 export default function() {
     // 로그인 시도
     const loginResult = http.post(
-        `${BASE_URL}/v1/auth/user/login`,
+        `${BASE_URL}/auth/user/login`,
         JSON.stringify({
             nickname: NICKNAME,
             password: PASSWORD
@@ -40,13 +40,12 @@ export default function() {
     // 일정 생성해보기
     const schedule = {
         title: "학교종이땡땡땡",
-        locationId: 1,
-        startAt: new Date(Date.now() + 60 * 2 * 1000).toISOString(),
-        endAt: new Date(Date.now() + 60 * 5 * 1000).toISOString()
+        regionCode: '0000000001',
+        startAt: new Date(Date.now() + 60 * 2 * 1000).toISOString()
     };
 
     const scheduleResponse = http.post(
-        `${BASE_URL}/v1/schedules`,
+        `${BASE_URL}/schedules`,
         JSON.stringify(schedule),
         {
             headers: {
