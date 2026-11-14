@@ -74,35 +74,44 @@ class WeatherCollectWorker(
             }
             .retrieve()
             .body(KmaWeatherFutureFetchResponse::class.java)
-            ?.response?.body?.items?.item
+            ?.response
+            ?.let { response ->
+                // 에러 응답은 header 만 오고 body 가 없다. 원인(코드, 메시지)을 로그에 남기기 위해 먼저 확인한다.
+                // 00 정상, 03 데이터없음, 10 잘못된 파라미터, 22 요청횟수 초과 등
+                if (response.header.resultCode != "00") {
+                    error("기상청 응답 오류 (resultCode=${response.header.resultCode}, resultMsg=${response.header.resultMsg})")
+                }
+                response.body?.items?.item ?: error("기상청 응답에 예보 항목이 없음")
+            }
             ?: error("기상청 응답이 비어 있음")
+}
 
-    // 기상청 응답은 "예보시각 x 항목" 마다 한 줄이다(15시 SKY, 15시 PTY, 15시 POP, 15시 TMP, 15시 REH ...).
-    // 이를 "예보시각" 마다 하나(15시: sky, pty, pop, tmp)로 바꾼다.
-    private fun toForecasts(
-        nx: Int,
-        ny: Int,
-        items: List<KmaWeatherFutureFetchResponse.ItemFuture>
-    ): List<WeatherForecast> {
-        // 1. 예보 시각별로 묶는다: "202611121500" -> [SKY 줄, PTY 줄, POP 줄, TMP 줄, ...]
-        val itemsByTime = items.groupBy { it.fcstDate + it.fcstTime }
+// 단위 테스트에서 직접 호출할 수 있도록 클래스 밖 internal 함수로 둔다.
+// 기상청 응답은 "예보시각 x 항목" 마다 한 줄이다(15시 SKY, 15시 PTY, 15시 POP, 15시 TMP, 15시 REH ...).
+// 이를 "예보시각" 마다 하나(15시: sky, pty, pop, tmp)로 바꾼다.
+internal fun toForecasts(
+    nx: Int,
+    ny: Int,
+    items: List<KmaWeatherFutureFetchResponse.ItemFuture>
+): List<WeatherForecast> {
+    // 1. 예보 시각별로 묶는다: "202611121500" -> [SKY 줄, PTY 줄, POP 줄, TMP 줄, ...]
+    val itemsByTime = items.groupBy { it.fcstDate + it.fcstTime }
 
-        val forecasts = mutableListOf<WeatherForecast>()
-        for ((time, itemsAtTime) in itemsByTime) {
-            // 2. 그 시각의 줄들을 "항목 -> 값" 으로: {SKY=1, PTY=0, POP=20, TMP=3.5, REH=60, ...}
-            val valueOf = itemsAtTime.associate { it.category to it.fcstValue }
+    val forecasts = mutableListOf<WeatherForecast>()
+    for ((time, itemsAtTime) in itemsByTime) {
+        // 2. 그 시각의 줄들을 "항목 -> 값" 으로: {SKY=1, PTY=0, POP=20, TMP=3.5, REH=60, ...}
+        val valueOf = itemsAtTime.associate { it.category to it.fcstValue }
 
-            // 3. 필요한 4개 항목만 꺼내 하나로 만든다
-            forecasts += WeatherForecast(
-                nx = nx,
-                ny = ny,
-                fcstAt = LocalDateTime.parse(time, FCST_FORMAT),
-                sky = valueOf["SKY"]?.toIntOrNull(),
-                pty = valueOf["PTY"]?.toIntOrNull(),
-                pop = valueOf["POP"]?.toIntOrNull(),
-                tmp = valueOf["TMP"]?.toDoubleOrNull()
-            )
-        }
-        return forecasts
+        // 3. 필요한 4개 항목만 꺼내 하나로 만든다
+        forecasts += WeatherForecast(
+            nx = nx,
+            ny = ny,
+            fcstAt = LocalDateTime.parse(time, FCST_FORMAT),
+            sky = valueOf["SKY"]?.toIntOrNull(),
+            pty = valueOf["PTY"]?.toIntOrNull(),
+            pop = valueOf["POP"]?.toIntOrNull(),
+            tmp = valueOf["TMP"]?.toDoubleOrNull()
+        )
     }
+    return forecasts
 }

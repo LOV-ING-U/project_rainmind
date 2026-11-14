@@ -13,6 +13,7 @@ class RegionCatalog {
     fun findByCode(code: String): Region? = byCode[code]
 
     // 날씨 수집 대상 격자(중복 제거)
+    // set of (nx, ny)
     fun grids(): Set<Pair<Int, Int>> = regions.map { it.nx to it.ny }.toSet()
 
     private fun load(): List<Region> =

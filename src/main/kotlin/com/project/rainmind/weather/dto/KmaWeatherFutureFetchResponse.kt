@@ -5,7 +5,8 @@ data class KmaWeatherFutureFetchResponse (
 ) {
     data class TotalResponseFuture(
         val header: HeaderFuture,
-        val body: BodyFuture
+        // 에러 응답에는 body 가 없다
+        val body: BodyFuture?
     )
 
     data class HeaderFuture(
@@ -15,13 +16,15 @@ data class KmaWeatherFutureFetchResponse (
 
     data class BodyFuture(
         val dataType: String,
-        val items: ItemsFuture
+        // 데이터가 없으면 items 가 비어 올 수 있다
+        val items: ItemsFuture?
     )
 
     data class ItemsFuture(
         val item: List<ItemFuture>
     )
 
+    // 단기 예보 조회의 응답 메시지 명세 그대로
     data class ItemFuture(
         val baseDate: String,
         val baseTime: String,

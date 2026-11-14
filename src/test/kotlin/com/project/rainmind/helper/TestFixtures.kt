@@ -19,8 +19,8 @@ import java.time.OffsetDateTime
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicLong
 
-// regions.csv 의 샘플 지역
-const val SAMPLE_REGION_CODE = "0000000001"
+// 테스트용 지역: 서울특별시 관악구 신림동 (regions.csv 의 실제 행)
+const val SAMPLE_REGION_CODE = "1162069500"
 const val SAMPLE_NX = 59
 const val SAMPLE_NY = 125
 
