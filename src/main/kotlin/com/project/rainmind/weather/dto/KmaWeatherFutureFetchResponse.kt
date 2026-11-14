@@ -1,6 +1,5 @@
 package com.project.rainmind.weather.dto
 
-
 data class KmaWeatherFutureFetchResponse (
     val response: TotalResponseFuture
 ) {
